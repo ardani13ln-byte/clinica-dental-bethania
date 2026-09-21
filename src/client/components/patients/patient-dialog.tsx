@@ -9,7 +9,7 @@ import { api } from "@/api";
 import { useApp } from "@/context";
 import type { Patient } from "@/types";
 
-const REFERRAL_SOURCES = ["Google", "Facebook", "Yelp", "Friend / family", "Insurance directory", "Walk-in", "Other"];
+const REFERRAL_SOURCES = ["Google", "Facebook", "Yelp", "Amigo / familiar", "Directorio de seguros", "Caminando", "Otro"];
 
 interface Props {
   open: boolean;
@@ -48,7 +48,7 @@ export function PatientDialog({ open, onOpenChange, patient, onSaved }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!first.trim() || !last.trim()) {
-      app.setError("First and last name are required");
+      app.setError("Nombre y apellido son obligatorios");
       return;
     }
     setSaving(true);
@@ -80,56 +80,56 @@ export function PatientDialog({ open, onOpenChange, patient, onSaved }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{patient ? "Edit patient" : "New patient"}</DialogTitle>
+          <DialogTitle>{patient ? "Editar paciente" : "Nuevo paciente"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="First name *">
+            <Field label="Nombre *">
               <Input value={first} onChange={(e) => setFirst(e.target.value)} required />
             </Field>
-            <Field label="Last name *">
+            <Field label="Apellido *">
               <Input value={last} onChange={(e) => setLast(e.target.value)} required />
             </Field>
-            <Field label="Date of birth">
+            <Field label="Fecha de nacimiento">
               <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
             </Field>
             <Field label="Email">
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </Field>
-            <Field label="Phone">
+            <Field label="Teléfono">
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
             </Field>
-            <Field label="Address">
+            <Field label="Dirección">
               <Input value={address} onChange={(e) => setAddress(e.target.value)} />
             </Field>
           </div>
-          <Field label="Medical alerts (comma-separated)">
+          <Field label="Alertas médicas (separadas por comas)">
             <Input
               value={alerts}
               onChange={(e) => setAlerts(e.target.value)}
-              placeholder="e.g. allergy:penicillin, diabetes, anticoagulant"
+              placeholder="ej. alergia:penicilina, diabetes, anticoagulante"
             />
           </Field>
-          <Field label="How did they hear about us?">
+          <Field label="¿Cómo se enteró de nosotros?">
             <Select value={referralSource} onValueChange={setReferralSource}>
-              <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Unknown —</SelectItem>
+                <SelectItem value="none">— Desconocido —</SelectItem>
                 {REFERRAL_SOURCES.map((s) => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Notes">
+          <Field label="Notas">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : patient ? "Save" : "Create"}
+              {saving ? "Guardando…" : patient ? "Guardar" : "Crear"}
             </Button>
           </DialogFooter>
         </form>

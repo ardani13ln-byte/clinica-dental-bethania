@@ -30,7 +30,7 @@ export function ReportsPage() {
   if (loading || !data) {
     return (
       <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        {loading ? "Loading…" : "No data"}
+        {loading ? "Cargando…" : "Sin datos"}
       </div>
     );
   }
@@ -47,42 +47,42 @@ export function ReportsPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold tracking-tight">Reports</h1>
-        <p className="text-xs text-muted-foreground">Practice KPIs · month-to-date</p>
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+        <h1 className="text-lg font-semibold tracking-tight">Reportes</h1>
+        <p className="text-xs text-muted-foreground">KPIs de la clínica · mes a la fecha</p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-auto p-4">
         {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <KpiCard icon={CalendarDays}  label="Today's appointments" value={data.today_appointments.toString()} tone="sky" />
-          <KpiCard icon={CalendarRange} label="This week"             value={data.week_appointments.toString()}  tone="emerald" />
-          <KpiCard icon={TrendingUp}    label="MTD production"        value={`$${data.month_production.toFixed(0)}`} sub={`${data.month_appointments} appts`} tone="violet" />
-          <KpiCard icon={Wallet}        label="MTD collections"       value={`$${data.month_collections.toFixed(0)}`} sub={`${collectionRate}% of production`} tone="amber" />
+          <KpiCard icon={CalendarDays}  label="Citas de hoy" value={data.today_appointments.toString()} tone="sky" />
+          <KpiCard icon={CalendarRange} label="Esta semana"             value={data.week_appointments.toString()}  tone="emerald" />
+          <KpiCard icon={TrendingUp}    label="Producción del mes"        value={`Q${data.month_production.toFixed(0)}`} sub={`${data.month_appointments} citas`} tone="violet" />
+          <KpiCard icon={Wallet}        label="Cobros del mes"       value={`Q${data.month_collections.toFixed(0)}`} sub={`${collectionRate}% de la producción`} tone="amber" />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {/* Completion vs no-show */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Appointment outcomes (MTD)</CardTitle>
+              <CardTitle className="text-base">Resultados de citas (mes)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Bar label="Completed" count={data.month_completed} total={data.month_appointments || 1} pct={completedRate} tone="emerald" />
-              <Bar label="No-shows"  count={data.month_no_shows}  total={data.month_appointments || 1} pct={noShowRate}    tone="rose" />
-              <Bar label="Cancelled" count={data.month_cancelled} total={data.month_appointments || 1} pct={Math.round((data.month_cancelled / (data.month_appointments || 1)) * 100)} tone="slate" />
+              <Bar label="Completado" count={data.month_completed} total={data.month_appointments || 1} pct={completedRate} tone="emerald" />
+              <Bar label="Inasistencias"  count={data.month_no_shows}  total={data.month_appointments || 1} pct={noShowRate}    tone="rose" />
+              <Bar label="Cancelado" count={data.month_cancelled} total={data.month_appointments || 1} pct={Math.round((data.month_cancelled / (data.month_appointments || 1)) * 100)} tone="slate" />
             </CardContent>
           </Card>
 
           {/* Operational alerts */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Needs attention</CardTitle>
+              <CardTitle className="text-base">Requiere atención</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <Alert icon={ListChecks} label="Patients on waiting list" value={data.waiting_list_count} tone={data.waiting_list_count > 0 ? "sky" : "slate"} />
-              <Alert icon={FlaskConical} label="Overdue lab cases" value={data.overdue_lab_cases} tone={data.overdue_lab_cases > 0 ? "rose" : "slate"} />
-              <Alert icon={AlertTriangle} label="No-shows this month" value={data.month_no_shows} tone={data.month_no_shows > 0 ? "amber" : "slate"} />
+              <Alert icon={ListChecks} label="Pacientes en lista de espera" value={data.waiting_list_count} tone={data.waiting_list_count > 0 ? "sky" : "slate"} />
+              <Alert icon={FlaskConical} label="Casos de laboratorio vencidos" value={data.overdue_lab_cases} tone={data.overdue_lab_cases > 0 ? "rose" : "slate"} />
+              <Alert icon={AlertTriangle} label="Inasistencias este mes" value={data.month_no_shows} tone={data.month_no_shows > 0 ? "amber" : "slate"} />
             </CardContent>
           </Card>
         </div>
@@ -90,14 +90,14 @@ export function ReportsPage() {
         {/* Aged receivables */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Aged receivables</CardTitle>
-            <p className="text-xs text-muted-foreground">Outstanding balances by days since invoice issue</p>
+            <CardTitle className="text-base">Cuentas por cobrar</CardTitle>
+            <p className="text-xs text-muted-foreground">Saldos pendientes por días desde emisión</p>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <ARBucket label="0–30 days"  amount={data.aged_receivables["0-30"]}  tone="emerald" />
-            <ARBucket label="31–60 days" amount={data.aged_receivables["31-60"]} tone="amber" />
-            <ARBucket label="61–90 days" amount={data.aged_receivables["61-90"]} tone="orange" />
-            <ARBucket label="90+ days"   amount={data.aged_receivables["90+"]}   tone="rose" />
+            <ARBucket label="0–30 días"  amount={data.aged_receivables["0-30"]}  tone="emerald" />
+            <ARBucket label="31–60 días" amount={data.aged_receivables["31-60"]} tone="amber" />
+            <ARBucket label="61–90 días" amount={data.aged_receivables["61-90"]} tone="orange" />
+            <ARBucket label="90+ días"   amount={data.aged_receivables["90+"]}   tone="rose" />
           </CardContent>
         </Card>
 
@@ -105,11 +105,11 @@ export function ReportsPage() {
           {/* By treatment */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Top treatments (MTD)</CardTitle>
+              <CardTitle className="text-base">Tratamientos principales (mes)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {data.by_treatment.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No appointments this month yet.</p>
+                <p className="text-sm text-muted-foreground">Aún no hay citas este mes.</p>
               ) : (
                 data.by_treatment.slice(0, 8).map((row, i) => {
                   const max = data.by_treatment[0].n || 1;
@@ -132,12 +132,12 @@ export function ReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="h-4 w-4" /> Patients by acquisition source
+                <Users className="h-4 w-4" /> Pacientes por origen
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {data.by_source.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No patients yet.</p>
+                <p className="text-sm text-muted-foreground">Aún no hay pacientes.</p>
               ) : (
                 data.by_source.slice(0, 8).map((row, i) => {
                   const max = data.by_source[0].n || 1;
@@ -220,7 +220,7 @@ function ARBucket({ label, amount, tone }: { label: string; amount: number; tone
   return (
     <div className={cn("rounded-lg border p-3", t.bg, t.border)}>
       <div className={cn("text-xs font-semibold uppercase tracking-wider opacity-80", t.text)}>{label}</div>
-      <div className={cn("mt-1 text-xl font-bold tabular-nums", t.text)}>${amount.toFixed(0)}</div>
+      <div className={cn("mt-1 text-xl font-bold tabular-nums", t.text)}>Q{amount.toFixed(0)}</div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { DayToolbar } from "./day-toolbar";
 import { DayGrid } from "./day-grid";
 import { AppointmentDialog } from "./appointment-dialog";
 import { AgendaSidePanel } from "./side-panel";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 export function AgendaPage() {
   const app = useApp();
@@ -14,7 +15,6 @@ export function AgendaPage() {
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [defaults, setDefaults] = useState<{ operatoryId: number; minutesFromMidnight: number } | undefined>();
 
-  // Reload appointments whenever the day or operatory list changes.
   useEffect(() => {
     if (!app.operatories.length) return;
     app.refreshDay(date).catch((err) => app.setError((err as Error).message));
@@ -56,6 +56,7 @@ export function AgendaPage() {
         date={date}
         defaults={defaults}
       />
+      <MobileFAB onClick={() => openCreate()} label="Nueva cita" />
     </div>
   );
 }

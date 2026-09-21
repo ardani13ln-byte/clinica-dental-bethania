@@ -17,16 +17,16 @@ const ROLES: PractitionerRole[] = ["dentist", "hygienist", "assistant"];
 export function SettingsPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold tracking-tight">Settings</h1>
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+        <h1 className="text-lg font-semibold tracking-tight">Configuración</h1>
       </div>
       <div className="flex-1 overflow-auto p-4">
         <Tabs defaultValue="operatories">
           <TabsList>
-            <TabsTrigger value="operatories">Operatories</TabsTrigger>
-            <TabsTrigger value="practitioners">Practitioners</TabsTrigger>
-            <TabsTrigger value="treatments">Treatment types</TabsTrigger>
-            <TabsTrigger value="hours">Hours</TabsTrigger>
+            <TabsTrigger value="operatories">Consultorios</TabsTrigger>
+            <TabsTrigger value="practitioners">Odontólogos</TabsTrigger>
+            <TabsTrigger value="treatments">Tipos de tratamiento</TabsTrigger>
+            <TabsTrigger value="hours">Horarios</TabsTrigger>
           </TabsList>
           <TabsContent value="operatories" className="mt-4">
             <OperatoriesTab />
@@ -67,11 +67,11 @@ function HoursTab() {
     const startMin = parseHHMM(start);
     const endMin = parseHHMM(end);
     if (Number.isNaN(startMin) || Number.isNaN(endMin)) {
-      app.setError("Enter valid HH:MM times");
+      app.setError("Ingresa horas válidas HH:MM");
       return;
     }
     if (endMin <= startMin) {
-      app.setError("End must be after start");
+      app.setError("El fin debe ser después del inicio");
       return;
     }
     setBusy(true);
@@ -94,21 +94,21 @@ function HoursTab() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          Working hours
+          Horario de trabajo
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Controls the time range shown on the agenda day-view and the granularity of bookable slots.
+          Controla el rango de horas mostrado en la agenda y la granularidad de los espacios reservables.
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={save} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-          <FieldGroup label="Day starts">
+          <FieldGroup label="Inicio del día">
             <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} required />
           </FieldGroup>
-          <FieldGroup label="Day ends">
+          <FieldGroup label="Fin del día">
             <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} required />
           </FieldGroup>
-          <FieldGroup label="Slot length">
+          <FieldGroup label="Duración del espacio">
             <Select value={slot.toString()} onValueChange={(v) => setSlot(parseInt(v, 10))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -119,11 +119,11 @@ function HoursTab() {
             </Select>
           </FieldGroup>
           <Button type="submit" disabled={busy}>
-            {busy ? "Saving…" : "Save"}
+            {busy ? "Guardando…" : "Guardar"}
           </Button>
         </form>
         {savedAt && (
-          <p className="mt-3 text-xs text-emerald-700">Saved. The agenda will reflect the new hours immediately.</p>
+          <p className="mt-3 text-xs text-emerald-700">Guardado. La agenda reflejará los nuevos horarios inmediatamente.</p>
         )}
       </CardContent>
     </Card>
@@ -184,7 +184,7 @@ function OperatoriesTab() {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this operatory? Existing appointments in it will be deleted too.")) return;
+    if (!confirm("¿Eliminar este consultorio? Las citas existentes también serán eliminadas.")) return;
     try {
       await api("DELETE", `/api/operatories/${id}`);
       app.refreshLookups();
@@ -196,18 +196,18 @@ function OperatoriesTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Operatories</CardTitle>
+        <CardTitle>Consultorios</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <form onSubmit={add} className="grid items-end gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[2fr_1fr_auto]">
-          <FieldGroup label="Name">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Op 4" required />
+          <FieldGroup label="Nombre">
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ej. Consultorio 4" required />
           </FieldGroup>
           <FieldGroup label="Color">
             <ColorSelect value={color} onChange={setColor} />
           </FieldGroup>
           <Button type="submit" disabled={busy}>
-            <Plus className="h-4 w-4" /> Add
+            <Plus className="h-4 w-4" /> Agregar
           </Button>
         </form>
 
@@ -215,14 +215,14 @@ function OperatoriesTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="px-3 py-2 font-semibold">Name</th>
+                <th className="px-3 py-2 font-semibold">Nombre</th>
                 <th className="px-3 py-2 font-semibold">Color</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {app.operatories.length === 0 ? (
-                <tr><td colSpan={3} className="px-3 py-8 text-center text-muted-foreground">No operatories yet.</td></tr>
+                <tr><td colSpan={3} className="px-3 py-8 text-center text-muted-foreground">Aún no hay consultorios.</td></tr>
               ) : app.operatories.map((o) => {
                 const palette = colorClasses(o.color);
                 const editing = editingId === o.id;
@@ -310,7 +310,7 @@ function PractitionersTab() {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this practitioner?")) return;
+    if (!confirm("¿Eliminar este odontólogo?")) return;
     try {
       await api("DELETE", `/api/practitioners/${id}`);
       app.refreshLookups();
@@ -322,18 +322,18 @@ function PractitionersTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Practitioners</CardTitle>
+        <CardTitle>Odontólogos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <form onSubmit={add} className="grid items-end gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[2fr_1fr_1fr_auto]">
-          <FieldGroup label="Name">
+          <FieldGroup label="Nombre">
             <Input value={name} onChange={(e) => setName(e.target.value)} required />
           </FieldGroup>
-          <FieldGroup label="Role">
+          <FieldGroup label="Rol">
             <Select value={role} onValueChange={(v) => setRole(v as PractitionerRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {ROLES.map((r) => <SelectItem key={r} value={r}>{capitalize(r)}</SelectItem>)}
+                {ROLES.map((r) => <SelectItem key={r} value={r}>{roleLabel(r)}</SelectItem>)}
               </SelectContent>
             </Select>
           </FieldGroup>
@@ -341,7 +341,7 @@ function PractitionersTab() {
             <ColorSelect value={color} onChange={setColor} />
           </FieldGroup>
           <Button type="submit" disabled={busy}>
-            <Plus className="h-4 w-4" /> Add
+            <Plus className="h-4 w-4" /> Agregar
           </Button>
         </form>
 
@@ -349,15 +349,15 @@ function PractitionersTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="px-3 py-2 font-semibold">Name</th>
-                <th className="px-3 py-2 font-semibold">Role</th>
+                <th className="px-3 py-2 font-semibold">Nombre</th>
+                <th className="px-3 py-2 font-semibold">Rol</th>
                 <th className="px-3 py-2 font-semibold">Color</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {app.practitioners.length === 0 ? (
-                <tr><td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">No practitioners yet.</td></tr>
+                <tr><td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">Aún no hay odontólogos.</td></tr>
               ) : app.practitioners.map((p) => {
                 const palette = colorClasses(p.color);
                 const editing = editingId === p.id;
@@ -373,13 +373,13 @@ function PractitionersTab() {
                         </div>
                       )}
                     </td>
-                    <td className="px-3 py-2 capitalize">
+                    <td className="px-3 py-2">
                       {editing ? (
                         <Select value={edit.role} onValueChange={(v) => setEdit({ ...edit, role: v as PractitionerRole })}>
                           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                          <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r}>{capitalize(r)}</SelectItem>)}</SelectContent>
+                          <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r}>{roleLabel(r)}</SelectItem>)}</SelectContent>
                         </Select>
-                      ) : p.role}
+                      ) : roleLabel(p.role)}
                     </td>
                     <td className="px-3 py-2">
                       {editing ? <ColorSelect value={edit.color} onChange={(c) => setEdit({ ...edit, color: c })} /> : <span className="capitalize text-muted-foreground">{p.color}</span>}
@@ -445,7 +445,7 @@ function TreatmentTypesTab() {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this treatment type?")) return;
+    if (!confirm("¿Eliminar este tipo de tratamiento?")) return;
     try {
       await api("DELETE", `/api/treatment-types/${id}`);
       app.refreshLookups();
@@ -457,33 +457,33 @@ function TreatmentTypesTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Treatment types</CardTitle>
+        <CardTitle>Tipos de tratamiento</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <form onSubmit={add} className="grid items-end gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[1fr_2fr_1fr_1fr_1fr_auto]">
-          <FieldGroup label="Code"><Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="EXAM" required /></FieldGroup>
-          <FieldGroup label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Exam & Cleaning" required /></FieldGroup>
-          <FieldGroup label="Duration (min)"><Input type="number" min="5" value={duration} onChange={(e) => setDuration(e.target.value)} /></FieldGroup>
-          <FieldGroup label="Default fee"><Input type="number" step="0.01" min="0" value={fee} onChange={(e) => setFee(e.target.value)} /></FieldGroup>
+          <FieldGroup label="Código"><Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="EXAM" required /></FieldGroup>
+          <FieldGroup label="Nombre"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Examen y limpieza" required /></FieldGroup>
+          <FieldGroup label="Duración (min)"><Input type="number" min="5" value={duration} onChange={(e) => setDuration(e.target.value)} /></FieldGroup>
+          <FieldGroup label="Tarifa predeterminada"><Input type="number" step="0.01" min="0" value={fee} onChange={(e) => setFee(e.target.value)} /></FieldGroup>
           <FieldGroup label="Color"><ColorSelect value={color} onChange={setColor} /></FieldGroup>
-          <Button type="submit" disabled={busy}><Plus className="h-4 w-4" /> Add</Button>
+          <Button type="submit" disabled={busy}><Plus className="h-4 w-4" /> Agregar</Button>
         </form>
 
         <div className="overflow-hidden rounded-md border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="px-3 py-2 font-semibold">Code</th>
-                <th className="px-3 py-2 font-semibold">Name</th>
-                <th className="px-3 py-2 text-right font-semibold">Duration</th>
-                <th className="px-3 py-2 text-right font-semibold">Default fee</th>
+                <th className="px-3 py-2 font-semibold">Código</th>
+                <th className="px-3 py-2 font-semibold">Nombre</th>
+                <th className="px-3 py-2 text-right font-semibold">Duración</th>
+                <th className="px-3 py-2 text-right font-semibold">Tarifa predeterminada</th>
                 <th className="px-3 py-2 font-semibold">Color</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {app.treatmentTypes.length === 0 ? (
-                <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">No treatment types yet.</td></tr>
+                <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">Aún no hay tipos de tratamiento.</td></tr>
               ) : app.treatmentTypes.map((t) => {
                 const palette = colorClasses(t.color);
                 return (
@@ -491,7 +491,7 @@ function TreatmentTypesTab() {
                     <td className="px-3 py-2 font-mono text-xs">{t.code}</td>
                     <td className="px-3 py-2 font-medium">{t.name}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{t.duration_minutes} min</td>
-                    <td className="px-3 py-2 text-right tabular-nums">${t.default_fee.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">Q{t.default_fee.toFixed(2)}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span className={cn("inline-block h-2 w-2 rounded-full", palette.dot)} />
@@ -543,6 +543,9 @@ function ColorSelect({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function roleLabel(r: PractitionerRole): string {
+  if (r === "dentist") return "Dentista";
+  if (r === "hygienist") return "Higienista";
+  if (r === "assistant") return "Asistente";
+  return r;
 }

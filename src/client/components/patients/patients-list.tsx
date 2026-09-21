@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDate } from "@/lib/utils";
 import type { Patient } from "@/types";
 import { PatientDialog } from "./patient-dialog";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
   const app = useApp();
@@ -44,20 +45,20 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold tracking-tight">Patients</h1>
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
+        <h1 className="text-lg font-semibold tracking-tight">Pacientes</h1>
         <div className="relative ml-auto w-full max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name, email, phone…"
+            placeholder="Buscar por nombre, email, teléfono…"
             className="pl-9"
           />
         </div>
         <Button onClick={() => setDialogOpen(true)} size="sm">
           <Plus className="h-4 w-4" />
-          New patient
+          Nuevo paciente
         </Button>
       </div>
 
@@ -66,24 +67,24 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>DOB</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Nacimiento</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Alerts</TableHead>
+                <TableHead>Teléfono</TableHead>
+                <TableHead>Alertas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && visible.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
-                    Loading…
+                    Cargando…
                   </TableCell>
                 </TableRow>
               ) : visible.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
-                    {q ? "No patients match your search." : "No patients yet. Click “New patient” to add one."}
+                    {q ? "Ningún paciente coincide con tu búsqueda." : "Aún no hay pacientes. Haz clic en \"Nuevo paciente\" para agregar uno."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -104,7 +105,7 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
                     <TableCell>
                       {p.medical_alerts ? (
                         <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800">
-                          {p.medical_alerts.split(",").length} alert{p.medical_alerts.split(",").length === 1 ? "" : "s"}
+                          {p.medical_alerts.split(",").length} alerta{p.medical_alerts.split(",").length === 1 ? "" : "s"}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -127,6 +128,8 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
           navigate(`/patients/${p.id}`);
         }}
       />
+
+      <MobileFAB onClick={() => setDialogOpen(true)} label="Nuevo paciente" />
     </div>
   );
 }

@@ -1,8 +1,10 @@
+import { useAuth } from "./hooks/use-auth";
 import { useAppState } from "./hooks/use-app-state";
 import { useRouter } from "./hooks/use-router";
 import { AppContext } from "./context";
 import { Sidebar } from "./components/sidebar";
 import { ErrorBanner } from "./components/error-banner";
+import { LoginPage } from "./components/login-page";
 import { AgendaPage } from "./components/agenda/agenda-page";
 import { PatientsList } from "./components/patients/patients-list";
 import { PatientPage } from "./components/patients/patient-page";
@@ -11,17 +13,35 @@ import { LabPage } from "./components/lab/lab-page";
 import { SettingsPage } from "./components/settings/settings-page";
 
 export function App() {
+  const { user, loading: authLoading, signIn, signOut } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-muted-foreground">
+        Cargando…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage onSignIn={signIn} />;
+  }
+
+  return <MainApp signOut={signOut} userEmail={user.email ?? ""} />;
+}
+
+function MainApp({ signOut, userEmail }: { signOut: () => Promise<void>; userEmail: string }) {
   const state = useAppState();
   const { route, navigate } = useRouter();
 
   return (
     <AppContext.Provider value={state}>
       <div className="flex h-screen min-h-0 overflow-hidden">
-        <Sidebar route={route} navigate={navigate} />
+        <Sidebar route={route} navigate={navigate} signOut={signOut} userEmail={userEmail} />
         <main className="flex flex-1 flex-col overflow-hidden">
           {state.loading ? (
             <div className="flex flex-1 items-center justify-center text-muted-foreground">
-              Loading…
+              Cargando…
             </div>
           ) : (
             <>
@@ -32,7 +52,7 @@ export function App() {
               {route.name === "lab" && <LabPage navigate={navigate} />}
               {route.name === "settings" && <SettingsPage />}
               {route.name === "not-found" && (
-                <Placeholder title="Not found" message="That page doesn't exist." />
+                <Placeholder title="No encontrado" message="Esa página no existe." />
               )}
             </>
           )}

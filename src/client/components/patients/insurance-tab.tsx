@@ -41,7 +41,7 @@ export function InsuranceTab({ patientId }: { patientId: number }) {
   }, [patientId, app]);
 
   async function remove(id: number) {
-    if (!confirm("Delete this insurance plan?")) return;
+    if (!confirm("¿Eliminar este seguro?")) return;
     try {
       await api("DELETE", `/api/insurance-plans/${id}`);
       setPlans((prev) => prev.filter((p) => p.id !== id));
@@ -55,19 +55,19 @@ export function InsuranceTab({ patientId }: { patientId: number }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Shield className="h-4 w-4" />
-          {plans.length} plan{plans.length === 1 ? "" : "s"} on file
+          {plans.length} plan{plans.length === 1 ? "" : "es"} en el expediente
         </div>
         <Button size="sm" onClick={() => setCreating(true)}>
-          <Plus className="h-4 w-4" /> Add insurance
+          <Plus className="h-4 w-4" /> Agregar seguro
         </Button>
       </div>
 
       {loading ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
       ) : plans.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No insurance on file.
+            Sin seguros en el expediente.
           </CardContent>
         </Card>
       ) : (
@@ -119,29 +119,29 @@ function PlanCard({ plan, onEdit, onRemove }: { plan: InsurancePlan; onEdit: () 
               <CardTitle className="text-base">{plan.carrier}</CardTitle>
             </div>
             {plan.member_id && (
-              <div className="mt-1 text-xs text-muted-foreground">Member ID: <span className="font-mono">{plan.member_id}</span></div>
+              <div className="mt-1 text-xs text-muted-foreground">ID de miembro: <span className="font-mono">{plan.member_id}</span></div>
             )}
             {plan.group_id && (
-              <div className="text-xs text-muted-foreground">Group: <span className="font-mono">{plan.group_id}</span></div>
+              <div className="text-xs text-muted-foreground">Grupo: <span className="font-mono">{plan.group_id}</span></div>
             )}
           </div>
           <div className="flex gap-1">
-            <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={onRemove} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+            <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Editar"><Pencil className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={onRemove} aria-label="Eliminar"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <Detail label="Subscriber">{plan.subscriber_name || "—"}{plan.subscriber_dob && <span className="text-muted-foreground"> · {formatDate(plan.subscriber_dob)}</span>}</Detail>
-          <Detail label="Copay">${plan.copay.toFixed(2)}</Detail>
-          <Detail label="Effective">{plan.effective_date ? formatDate(plan.effective_date) : "—"}</Detail>
-          <Detail label="Term">{plan.term_date ? formatDate(plan.term_date) : "—"}</Detail>
+          <Detail label="Suscriptor">{plan.subscriber_name || "—"}{plan.subscriber_dob && <span className="text-muted-foreground"> · {formatDate(plan.subscriber_dob)}</span>}</Detail>
+          <Detail label="Copago">Q{plan.copay.toFixed(2)}</Detail>
+          <Detail label="Vigente">{plan.effective_date ? formatDate(plan.effective_date) : "—"}</Detail>
+          <Detail label="Vencimiento">{plan.term_date ? formatDate(plan.term_date) : "—"}</Detail>
         </div>
 
         {plan.deductible_total > 0 && (
           <Progress
-            label="Deductible"
+            label="Deducible"
             used={plan.deductible_used}
             total={plan.deductible_total}
             remaining={dedRemaining}
@@ -150,7 +150,7 @@ function PlanCard({ plan, onEdit, onRemove }: { plan: InsurancePlan; onEdit: () 
         )}
         {plan.max_annual > 0 && (
           <Progress
-            label="Annual maximum"
+            label="Máximo anual"
             used={plan.max_used}
             total={plan.max_annual}
             remaining={maxRemaining}
@@ -177,7 +177,7 @@ function Progress({ label, used, total, remaining, pct }: { label: string; used:
     <div>
       <div className="mb-1 flex items-baseline justify-between text-xs">
         <span className="font-medium">{label}</span>
-        <span className="tabular-nums text-muted-foreground">${used.toFixed(0)} / ${total.toFixed(0)} · ${remaining.toFixed(0)} left</span>
+        <span className="tabular-nums text-muted-foreground">Q{used.toFixed(0)} / Q{total.toFixed(0)} · Q{remaining.toFixed(0)} restante</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
@@ -241,7 +241,7 @@ function PlanDialog({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!carrier.trim()) {
-      app.setError("Carrier is required");
+      app.setError("La aseguradora es obligatoria");
       return;
     }
     setBusy(true);
@@ -278,49 +278,49 @@ function PlanDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{plan ? "Edit insurance plan" : "Add insurance plan"}</DialogTitle>
+          <DialogTitle>{plan ? "Editar seguro" : "Agregar seguro"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Rank">
+            <Field label="Orden">
               <Select value={rank} onValueChange={(v) => setRank(v as InsuranceRank)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="primary">Primary</SelectItem>
-                  <SelectItem value="secondary">Secondary</SelectItem>
-                  <SelectItem value="tertiary">Tertiary</SelectItem>
+                  <SelectItem value="primary">Primario</SelectItem>
+                  <SelectItem value="secondary">Secundario</SelectItem>
+                  <SelectItem value="tertiary">Terciario</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Carrier *" className="col-span-2">
-              <Input value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder="e.g. Delta Dental" required />
+            <Field label="Aseguradora *" className="col-span-2">
+              <Input value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder="ej. Delta Dental" required />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Member ID"><Input value={memberId} onChange={(e) => setMemberId(e.target.value)} /></Field>
-            <Field label="Group ID"><Input value={groupId} onChange={(e) => setGroupId(e.target.value)} /></Field>
-            <Field label="Subscriber name"><Input value={subscriberName} onChange={(e) => setSubscriberName(e.target.value)} /></Field>
-            <Field label="Subscriber DOB"><Input type="date" value={subscriberDob} onChange={(e) => setSubscriberDob(e.target.value)} /></Field>
-            <Field label="Effective date"><Input type="date" value={effective} onChange={(e) => setEffective(e.target.value)} /></Field>
-            <Field label="Term date"><Input type="date" value={term} onChange={(e) => setTerm(e.target.value)} /></Field>
+            <Field label="ID de miembro"><Input value={memberId} onChange={(e) => setMemberId(e.target.value)} /></Field>
+            <Field label="ID de grupo"><Input value={groupId} onChange={(e) => setGroupId(e.target.value)} /></Field>
+            <Field label="Nombre del suscriptor"><Input value={subscriberName} onChange={(e) => setSubscriberName(e.target.value)} /></Field>
+            <Field label="Nacimiento del suscriptor"><Input type="date" value={subscriberDob} onChange={(e) => setSubscriberDob(e.target.value)} /></Field>
+            <Field label="Fecha de vigencia"><Input type="date" value={effective} onChange={(e) => setEffective(e.target.value)} /></Field>
+            <Field label="Fecha de vencimiento"><Input type="date" value={term} onChange={(e) => setTerm(e.target.value)} /></Field>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Copay"><Input type="number" min="0" step="0.01" value={copay} onChange={(e) => setCopay(e.target.value)} /></Field>
-            <Field label="Deductible total"><Input type="number" min="0" step="0.01" value={dedTotal} onChange={(e) => setDedTotal(e.target.value)} /></Field>
-            <Field label="Deductible used"><Input type="number" min="0" step="0.01" value={dedUsed} onChange={(e) => setDedUsed(e.target.value)} /></Field>
-            <Field label="Annual max"><Input type="number" min="0" step="0.01" value={maxAnnual} onChange={(e) => setMaxAnnual(e.target.value)} /></Field>
-            <Field label="Max used"><Input type="number" min="0" step="0.01" value={maxUsed} onChange={(e) => setMaxUsed(e.target.value)} /></Field>
+            <Field label="Copago"><Input type="number" min="0" step="0.01" value={copay} onChange={(e) => setCopay(e.target.value)} /></Field>
+            <Field label="Deducible total"><Input type="number" min="0" step="0.01" value={dedTotal} onChange={(e) => setDedTotal(e.target.value)} /></Field>
+            <Field label="Deducible usado"><Input type="number" min="0" step="0.01" value={dedUsed} onChange={(e) => setDedUsed(e.target.value)} /></Field>
+            <Field label="Máximo anual"><Input type="number" min="0" step="0.01" value={maxAnnual} onChange={(e) => setMaxAnnual(e.target.value)} /></Field>
+            <Field label="Máximo usado"><Input type="number" min="0" step="0.01" value={maxUsed} onChange={(e) => setMaxUsed(e.target.value)} /></Field>
           </div>
 
-          <Field label="Notes">
+          <Field label="Notas">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </Field>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : plan ? "Save" : "Create"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancelar</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Guardando…" : plan ? "Guardar" : "Crear"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

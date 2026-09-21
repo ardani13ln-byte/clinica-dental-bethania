@@ -16,23 +16,23 @@ export function PatientOverview({ patient }: { patient: Patient }) {
     <div className="grid gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Contact</CardTitle>
+          <CardTitle>Contacto</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
-          <Detail icon={Calendar} label="Date of birth">
+          <Detail icon={Calendar} label="Fecha de nacimiento">
             {patient.date_of_birth ? (
               <>
-                {formatDate(patient.date_of_birth)} {age !== null && <span className="text-muted-foreground">· {age} yrs</span>}
+                {formatDate(patient.date_of_birth)} {age !== null && <span className="text-muted-foreground">· {age} años</span>}
               </>
             ) : "—"}
           </Detail>
           <Detail icon={Mail} label="Email">
             {patient.email ? <a href={`mailto:${patient.email}`} className="text-primary hover:underline">{patient.email}</a> : "—"}
           </Detail>
-          <Detail icon={Phone} label="Phone">
+          <Detail icon={Phone} label="Teléfono">
             {patient.phone ? <a href={`tel:${patient.phone}`} className="text-primary hover:underline">{patient.phone}</a> : "—"}
           </Detail>
-          <Detail icon={MapPin} label="Address">
+          <Detail icon={MapPin} label="Dirección">
             {patient.address || "—"}
           </Detail>
         </CardContent>
@@ -42,12 +42,12 @@ export function PatientOverview({ patient }: { patient: Patient }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
-            Medical alerts
+            Alertas médicas
           </CardTitle>
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No alerts on file.</p>
+            <p className="text-sm text-muted-foreground">Sin alertas en el expediente.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {alerts.map((a) => (
@@ -62,13 +62,13 @@ export function PatientOverview({ patient }: { patient: Patient }) {
 
       <Card className="lg:col-span-3">
         <CardHeader>
-          <CardTitle>Notes</CardTitle>
+          <CardTitle>Notas</CardTitle>
         </CardHeader>
         <CardContent>
           {patient.notes ? (
             <p className="whitespace-pre-wrap text-sm text-foreground">{patient.notes}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">No general notes on file.</p>
+            <p className="text-sm text-muted-foreground">Sin notas generales en el expediente.</p>
           )}
         </CardContent>
       </Card>

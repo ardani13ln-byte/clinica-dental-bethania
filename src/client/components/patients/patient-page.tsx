@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import type { Patient } from "@/types";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PatientOverview } from "./patient-overview";
 import { ToothChart } from "./tooth-chart";
 import { TreatmentPlan } from "./treatment-plan";
@@ -46,7 +47,7 @@ export function PatientPage({ id, navigate }: Props) {
 
   async function deletePatient() {
     if (!patient) return;
-    if (!confirm(`Delete ${patient.first_name} ${patient.last_name}? This removes all their records.`)) return;
+    if (!confirm(`¿Eliminar a ${patient.first_name} ${patient.last_name}? Esto borra todos sus registros.`)) return;
     try {
       await api("DELETE", `/api/patients/${patient.id}`);
       navigate("/patients");
@@ -56,14 +57,14 @@ export function PatientPage({ id, navigate }: Props) {
   }
 
   if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-muted-foreground">Loading…</div>;
+    return <div className="flex flex-1 items-center justify-center text-muted-foreground">Cargando…</div>;
   }
 
   if (!patient) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <p className="text-lg font-medium">Patient not found</p>
-        <Button variant="outline" onClick={() => navigate("/patients")}>Back to patients</Button>
+        <p className="text-lg font-medium">Paciente no encontrado</p>
+        <Button variant="outline" onClick={() => navigate("/patients")}>Volver a pacientes</Button>
       </div>
     );
   }
@@ -72,9 +73,15 @@ export function PatientPage({ id, navigate }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="border-b bg-card px-4 py-3">
-        <div className="flex flex-wrap items-start gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/patients")} aria-label="Back">
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+        <Breadcrumbs
+          items={[
+            { label: "Pacientes", onClick: () => navigate("/patients") },
+            { label: `${patient.first_name} ${patient.last_name}` },
+          ]}
+        />
+        <div className="mt-2 flex flex-wrap items-start gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/patients")} aria-label="Volver">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
@@ -98,11 +105,11 @@ export function PatientPage({ id, navigate }: Props) {
           </div>
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
             <Pencil className="h-4 w-4" />
-            Edit
+            Editar
           </Button>
           <Button variant="ghost" size="sm" onClick={deletePatient} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
             <Trash2 className="h-4 w-4" />
-            Delete
+            Eliminar
           </Button>
         </div>
       </div>
@@ -110,12 +117,12 @@ export function PatientPage({ id, navigate }: Props) {
       <div className="flex-1 overflow-auto p-4">
         <Tabs defaultValue="overview">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="insurance">Insurance</TabsTrigger>
-            <TabsTrigger value="chart">Tooth Chart</TabsTrigger>
-            <TabsTrigger value="plan">Treatment Plan</TabsTrigger>
-            <TabsTrigger value="notes">Clinical Notes</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
+            <TabsTrigger value="overview">Resumen</TabsTrigger>
+            <TabsTrigger value="insurance">Seguro</TabsTrigger>
+            <TabsTrigger value="chart">Carta dental</TabsTrigger>
+            <TabsTrigger value="plan">Plan de tratamiento</TabsTrigger>
+            <TabsTrigger value="notes">Notas clínicas</TabsTrigger>
+            <TabsTrigger value="billing">Facturación</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="mt-4">
             <PatientOverview patient={patient} />

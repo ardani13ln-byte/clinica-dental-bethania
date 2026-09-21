@@ -29,7 +29,7 @@ export function formatDate(iso: string | null | undefined, opts?: Intl.DateTimeF
   if (!iso) return "";
   const d = new Date(iso.length <= 10 ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, opts ?? { year: "numeric", month: "short", day: "numeric" });
+  return d.toLocaleDateString("es-GT", opts ?? { year: "numeric", month: "short", day: "numeric" });
 }
 
 /** Format an ISO datetime to HH:MM. */
@@ -37,7 +37,7 @@ export function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return d.toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 /** YYYY-MM-DD for a given Date in local time. */

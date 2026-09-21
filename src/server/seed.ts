@@ -40,9 +40,9 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
 };
 
 export const SEED_OPERATORIES: SeedOperatory[] = [
-  { name: "Op 1", color: "sky", sort_order: 0 },
-  { name: "Op 2", color: "emerald", sort_order: 1 },
-  { name: "Op 3", color: "amber", sort_order: 2 },
+  { name: "Consultorio 1", color: "sky", sort_order: 0 },
+  { name: "Consultorio 2", color: "emerald", sort_order: 1 },
+  { name: "Consultorio 3", color: "amber", sort_order: 2 },
 ];
 
 export const SEED_PRACTITIONERS: SeedPractitioner[] = [
@@ -52,10 +52,10 @@ export const SEED_PRACTITIONERS: SeedPractitioner[] = [
 ];
 
 export const SEED_TREATMENT_TYPES: SeedTreatmentType[] = [
-  { code: "EXAM", name: "Exam & Cleaning", duration_minutes: 30, default_fee: 120, color: "sky" },
-  { code: "FILL", name: "Restoration / Filling", duration_minutes: 45, default_fee: 220, color: "amber" },
-  { code: "CROWN", name: "Crown", duration_minutes: 90, default_fee: 1100, color: "violet" },
-  { code: "ENDO", name: "Root Canal", duration_minutes: 90, default_fee: 950, color: "rose" },
-  { code: "EXT", name: "Extraction", duration_minutes: 30, default_fee: 250, color: "orange" },
-  { code: "CONS", name: "Consultation", duration_minutes: 20, default_fee: 80, color: "emerald" },
+  { code: "EXAM", name: "Examen y limpieza", duration_minutes: 30, default_fee: 120, color: "sky" },
+  { code: "FILL", name: "Restauración / Obturación", duration_minutes: 45, default_fee: 220, color: "amber" },
+  { code: "CROWN", name: "Corona", duration_minutes: 90, default_fee: 1100, color: "violet" },
+  { code: "ENDO", name: "Tratamiento de conducto", duration_minutes: 90, default_fee: 950, color: "rose" },
+  { code: "EXT", name: "Extracción", duration_minutes: 30, default_fee: 250, color: "orange" },
+  { code: "CONS", name: "Consulta", duration_minutes: 20, default_fee: 80, color: "emerald" },
 ];

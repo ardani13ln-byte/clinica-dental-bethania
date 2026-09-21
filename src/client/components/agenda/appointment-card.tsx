@@ -13,7 +13,7 @@ interface Props {
 function timeLabel(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleTimeString("es-GT", { hour: "numeric", minute: "2-digit" });
 }
 
 export function AppointmentCard({ appointment, onClick, topPx, heightPx }: Props) {
@@ -41,7 +41,7 @@ export function AppointmentCard({ appointment, onClick, topPx, heightPx }: Props
   const patientName =
     appointment.patient_first_name || appointment.patient_last_name
       ? `${appointment.patient_first_name ?? ""} ${appointment.patient_last_name ?? ""}`.trim()
-      : appointment.title || "Unnamed";
+      : appointment.title || "Sin nombre";
 
   const isCompact = heightPx < 56;
   const isVeryCompact = heightPx < 36;

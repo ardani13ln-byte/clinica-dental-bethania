@@ -97,7 +97,7 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
   }
 
   async function remove(id: number) {
-    if (!confirm("Remove this plan item?")) return;
+    if (!confirm("¿Quitar este ítem del plan?")) return;
     try {
       await api("DELETE", `/api/treatment-plan-items/${id}`);
       setItems((prev) => prev.filter((i) => i.id !== id));
@@ -109,23 +109,23 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryCard label="Planned"   amount={totals.planned}   tone="sky" />
-        <SummaryCard label="Accepted"  amount={totals.accepted}  tone="emerald" />
-        <SummaryCard label="Completed" amount={totals.completed} tone="slate" />
+        <SummaryCard label="Planificado"   amount={totals.planned}   tone="sky" />
+        <SummaryCard label="Aceptado"  amount={totals.accepted}  tone="emerald" />
+        <SummaryCard label="Completado" amount={totals.completed} tone="slate" />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Treatment plan</CardTitle>
+          <CardTitle>Plan de tratamiento</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <form onSubmit={addItem} className="grid grid-cols-1 items-end gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[2fr_1fr_1fr_auto]">
             <div className="space-y-1.5">
-              <Label className="text-xs">Treatment</Label>
+              <Label className="text-xs">Tratamiento</Label>
               <Select value={treatmentTypeId} onValueChange={setTreatmentTypeId}>
-                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— None —</SelectItem>
+                  <SelectItem value="none">— Ninguno —</SelectItem>
                   {app.treatmentTypes.map((t) => (
                     <SelectItem key={t.id} value={t.id.toString()}>{t.code} · {t.name}</SelectItem>
                   ))}
@@ -133,32 +133,32 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Tooth</Label>
-              <Input value={tooth} onChange={(e) => setTooth(e.target.value)} placeholder="e.g. 14" />
+              <Label className="text-xs">Diente</Label>
+              <Input value={tooth} onChange={(e) => setTooth(e.target.value)} placeholder="ej. 14" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Fee</Label>
+              <Label className="text-xs">Tarifa</Label>
               <Input type="number" step="0.01" min="0" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0.00" />
             </div>
             <Button type="submit" disabled={adding}>
               <Plus className="h-4 w-4" />
-              Add
+              Agregar
             </Button>
           </form>
 
           {loading ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
           ) : items.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">No plan items yet.</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Aún no hay ítems del plan.</p>
           ) : (
             <div className="overflow-hidden rounded-md border">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-3 py-2 font-semibold">Treatment</th>
-                    <th className="px-3 py-2 font-semibold">Tooth</th>
-                    <th className="px-3 py-2 text-right font-semibold">Fee</th>
-                    <th className="px-3 py-2 font-semibold">Status</th>
+                    <th className="px-3 py-2 font-semibold">Tratamiento</th>
+                    <th className="px-3 py-2 font-semibold">Diente</th>
+                    <th className="px-3 py-2 text-right font-semibold">Tarifa</th>
+                    <th className="px-3 py-2 font-semibold">Estado</th>
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
@@ -179,7 +179,7 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
                           </div>
                         </td>
                         <td className="px-3 py-2">{i.tooth ?? "—"}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">${i.fee.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">Q{i.fee.toFixed(2)}</td>
                         <td className="px-3 py-2">
                           <Select value={i.status} onValueChange={(v) => setStatus(i.id, v as TreatmentPlanStatus)}>
                             <SelectTrigger className={cn("h-7 w-[140px] text-xs", STATUS_STYLE[i.status])}>
@@ -187,13 +187,13 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
                             </SelectTrigger>
                             <SelectContent>
                               {STATUSES.map((s) => (
-                                <SelectItem key={s} value={s}>{capitalize(s)}</SelectItem>
+                                <SelectItem key={s} value={s}>{planStatusLabel(s)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </td>
                         <td className="px-3 py-2 text-right">
-                          <Button variant="ghost" size="icon" onClick={() => remove(i.id)} aria-label="Delete">
+                          <Button variant="ghost" size="icon" onClick={() => remove(i.id)} aria-label="Eliminar">
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </td>
@@ -215,11 +215,12 @@ function SummaryCard({ label, amount, tone }: { label: string; amount: number; t
   return (
     <div className={cn("rounded-lg border p-4", palette.bg, palette.border)}>
       <div className={cn("text-xs font-semibold uppercase tracking-wider", palette.text, "opacity-80")}>{label}</div>
-      <div className={cn("mt-1 text-2xl font-bold tabular-nums", palette.text)}>${amount.toFixed(2)}</div>
+      <div className={cn("mt-1 text-2xl font-bold tabular-nums", palette.text)}>Q{amount.toFixed(2)}</div>
     </div>
   );
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function planStatusLabel(s: string): string {
+  const map: Record<string, string> = { planned: "Planificado", accepted: "Aceptado", completed: "Completado", declined: "Rechazado" };
+  return map[s] ?? s;
 }

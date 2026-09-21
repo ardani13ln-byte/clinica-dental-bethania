@@ -12,11 +12,11 @@ type Brush = ToothCondition | "erase";
 
 const CONDITION_META: Record<ToothCondition, { label: string; fill: string; outline: string; chip: string }> = {
   caries:      { label: "Caries",       fill: "#fecaca", outline: "#dc2626", chip: "bg-rose-200 text-rose-900" },
-  restoration: { label: "Restoration",  fill: "#fde68a", outline: "#d97706", chip: "bg-amber-200 text-amber-900" },
-  crown:       { label: "Crown",        fill: "#ddd6fe", outline: "#7c3aed", chip: "bg-violet-200 text-violet-900" },
-  endo:        { label: "Endo",         fill: "#fbcfe8", outline: "#db2777", chip: "bg-fuchsia-200 text-fuchsia-900" },
-  implant:     { label: "Implant",      fill: "#99f6e4", outline: "#0d9488", chip: "bg-teal-200 text-teal-900" },
-  missing:     { label: "Missing",      fill: "#cbd5e1", outline: "#64748b", chip: "bg-slate-200 text-slate-700" },
+  restoration: { label: "Restauración",  fill: "#fde68a", outline: "#d97706", chip: "bg-amber-200 text-amber-900" },
+  crown:       { label: "Corona",        fill: "#ddd6fe", outline: "#7c3aed", chip: "bg-violet-200 text-violet-900" },
+  endo:        { label: "Endodoncia",    fill: "#fbcfe8", outline: "#db2777", chip: "bg-fuchsia-200 text-fuchsia-900" },
+  implant:     { label: "Implante",      fill: "#99f6e4", outline: "#0d9488", chip: "bg-teal-200 text-teal-900" },
+  missing:     { label: "Ausente",       fill: "#cbd5e1", outline: "#64748b", chip: "bg-slate-200 text-slate-700" },
 };
 
 const BRUSH_ORDER: ToothCondition[] = ["caries", "restoration", "crown", "endo", "implant", "missing"];
@@ -112,13 +112,13 @@ export function ToothChart({ patientId }: { patientId: number }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-3">
-            <span>Tooth chart</span>
-            <span className="ml-auto text-xs font-normal text-muted-foreground">FDI numbering</span>
+            <span>Carta dental</span>
+            <span className="ml-auto text-xs font-normal text-muted-foreground">Numeración FDI</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Brush:</span>
+            <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pincel:</span>
             {BRUSH_ORDER.map((c) => (
               <BrushButton
                 key={c}
@@ -144,7 +144,7 @@ export function ToothChart({ patientId }: { patientId: number }) {
               )}
             >
               <Eraser className="h-3.5 w-3.5" />
-              Erase
+              Borrar
             </button>
             <button
               type="button"
@@ -152,12 +152,12 @@ export function ToothChart({ patientId }: { patientId: number }) {
               className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent"
             >
               {readOnly ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-              {readOnly ? "Read-only" : "Editing"}
+              {readOnly ? "Solo lectura" : "Editando"}
             </button>
           </div>
 
           {loading ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
           ) : (
             <div className="odontogram-host mx-auto w-full max-w-md rounded-md bg-muted/30 p-2">
               <Odontogram
@@ -175,7 +175,7 @@ export function ToothChart({ patientId }: { patientId: number }) {
 
           {!readOnly && (
             <p className="text-xs text-muted-foreground">
-              Pick a brush above, then click any tooth to apply its condition. Click the same tooth again to clear it, or use <strong>Erase</strong>.
+              Elige un pincel arriba, luego haz clic en un diente para aplicar su condición. Haz clic de nuevo para limpiarlo, o usa <strong>Borrar</strong>.
             </p>
           )}
         </CardContent>

@@ -53,7 +53,7 @@ export function Billing({ patientId }: { patientId: number }) {
     e.preventDefault();
     const t = parseFloat(total || "0") || 0;
     if (t <= 0) {
-      app.setError("Enter an amount greater than 0");
+      app.setError("Ingresa un monto mayor a 0");
       return;
     }
     setAdding(true);
@@ -86,7 +86,7 @@ export function Billing({ patientId }: { patientId: number }) {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this invoice?")) return;
+    if (!confirm("¿Eliminar esta factura?")) return;
     try {
       await api("DELETE", `/api/invoices/${id}`);
       setInvoices((prev) => prev.filter((i) => i.id !== id));
@@ -98,19 +98,19 @@ export function Billing({ patientId }: { patientId: number }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryStat label="Billed"  amount={summary.billed}  tone="sky" />
-        <SummaryStat label="Paid"    amount={summary.paid}    tone="emerald" />
-        <SummaryStat label="Balance" amount={summary.balance} tone={summary.balance > 0 ? "rose" : "slate"} />
+        <SummaryStat label="Facturado"  amount={summary.billed}  tone="sky" />
+        <SummaryStat label="Pagado"    amount={summary.paid}    tone="emerald" />
+        <SummaryStat label="Saldo" amount={summary.balance} tone={summary.balance > 0 ? "rose" : "slate"} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Invoices</CardTitle>
+          <CardTitle>Facturas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <form onSubmit={addInvoice} className="grid grid-cols-1 items-end gap-2 rounded-md border bg-muted/30 p-3 sm:grid-cols-[1fr_auto]">
             <div className="space-y-1.5">
-              <Label className="text-xs">Quick invoice total</Label>
+              <Label className="text-xs">Total de factura rápida</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -122,24 +122,24 @@ export function Billing({ patientId }: { patientId: number }) {
             </div>
             <Button type="submit" disabled={adding}>
               <Plus className="h-4 w-4" />
-              Add invoice
+              Agregar factura
             </Button>
           </form>
 
           {loading ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
           ) : invoices.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">No invoices yet.</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Aún no hay facturas.</p>
           ) : (
             <div className="overflow-hidden rounded-md border">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-3 py-2 font-semibold">Issued</th>
+                    <th className="px-3 py-2 font-semibold">Emitida</th>
                     <th className="px-3 py-2 text-right font-semibold">Total</th>
-                    <th className="px-3 py-2 text-right font-semibold">Paid</th>
-                    <th className="px-3 py-2 text-right font-semibold">Balance</th>
-                    <th className="px-3 py-2 font-semibold">Status</th>
+                    <th className="px-3 py-2 text-right font-semibold">Pagado</th>
+                    <th className="px-3 py-2 text-right font-semibold">Saldo</th>
+                    <th className="px-3 py-2 font-semibold">Estado</th>
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
@@ -149,10 +149,10 @@ export function Billing({ patientId }: { patientId: number }) {
                     return (
                       <tr key={i.id} className="border-b last:border-0">
                         <td className="px-3 py-2">{formatDate(i.issued_at, { year: "numeric", month: "short", day: "numeric" })}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">${i.total.toFixed(2)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-emerald-700">${i.amount_paid.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">Q{i.total.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums text-emerald-700">Q{i.amount_paid.toFixed(2)}</td>
                         <td className={cn("px-3 py-2 text-right tabular-nums", balance > 0 ? "text-rose-700" : "text-muted-foreground")}>
-                          ${balance.toFixed(2)}
+                          Q{balance.toFixed(2)}
                         </td>
                         <td className="px-3 py-2">
                           <Select value={i.status} onValueChange={(v) => setStatus(i.id, v as Invoice["status"])}>
@@ -160,14 +160,14 @@ export function Billing({ patientId }: { patientId: number }) {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="open">Open</SelectItem>
-                              <SelectItem value="paid">Paid</SelectItem>
-                              <SelectItem value="void">Void</SelectItem>
+                              <SelectItem value="open">Abierta</SelectItem>
+                              <SelectItem value="paid">Pagada</SelectItem>
+                              <SelectItem value="void">Anulada</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
                         <td className="px-3 py-2 text-right">
-                          <Button variant="ghost" size="icon" onClick={() => remove(i.id)} aria-label="Delete">
+                          <Button variant="ghost" size="icon" onClick={() => remove(i.id)} aria-label="Eliminar">
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </td>
@@ -194,7 +194,7 @@ function SummaryStat({ label, amount, tone }: { label: string; amount: number; t
   return (
     <div className={cn("rounded-lg border p-4", styles.bg, styles.border)}>
       <div className={cn("text-xs font-semibold uppercase tracking-wider opacity-80", styles.text)}>{label}</div>
-      <div className={cn("mt-1 text-2xl font-bold tabular-nums", styles.text)}>${amount.toFixed(2)}</div>
+      <div className={cn("mt-1 text-2xl font-bold tabular-nums", styles.text)}>Q{amount.toFixed(2)}</div>
     </div>
   );
 }

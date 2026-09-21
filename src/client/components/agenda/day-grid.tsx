@@ -17,10 +17,10 @@ const HEADER_H = 56;              // operatory header height
 
 /** "6 AM" style hour label. */
 function hourLabel(h: number): string {
-  if (h === 0) return "12 AM";
-  if (h === 12) return "12 PM";
-  if (h < 12) return `${h} AM`;
-  return `${h - 12} PM`;
+  if (h === 0) return "12 a.m.";
+  if (h === 12) return "12 p.m.";
+  if (h < 12) return `${h} a.m.`;
+  return `${h - 12} p.m.`;
 }
 
 export function DayGrid({ date, operatories, appointments, onSlotClick, onAppointmentClick }: Props) {
@@ -64,8 +64,8 @@ export function DayGrid({ date, operatories, appointments, onSlotClick, onAppoin
     return (
       <div className="flex flex-1 items-center justify-center p-12 text-center text-muted-foreground">
         <div>
-          <p className="font-medium text-foreground">No operatories yet</p>
-          <p className="mt-1 text-sm">Add at least one operatory in Settings to start scheduling.</p>
+          <p className="font-medium text-foreground">No hay consultorios</p>
+          <p className="mt-1 text-sm">Agrega al menos un consultorio en Configuración para empezar a agendar.</p>
         </div>
       </div>
     );
@@ -143,7 +143,7 @@ export function DayGrid({ date, operatories, appointments, onSlotClick, onAppoin
                       className="absolute inset-x-0 cursor-cell transition-colors hover:bg-accent/30"
                       style={{ top: i * PX_PER_SLOT, height: PX_PER_SLOT }}
                       tabIndex={-1}
-                      aria-label={`Add appointment at ${String(Math.floor(slotMin / 60)).padStart(2, "0")}:${String(slotMin % 60).padStart(2, "0")}`}
+                      aria-label={`Agregar cita a las ${String(Math.floor(slotMin / 60)).padStart(2, "0")}:${String(slotMin % 60).padStart(2, "0")}`}
                     />
                   );
                 })}

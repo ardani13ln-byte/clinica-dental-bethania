@@ -22,7 +22,7 @@ export function AgendaSidePanel() {
         type="button"
         onClick={() => setCollapsed(false)}
         className="flex h-full w-8 items-center justify-center border-l bg-card text-muted-foreground transition-colors hover:bg-accent"
-        aria-label="Expand side panel"
+        aria-label="Expandir panel lateral"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -32,18 +32,18 @@ export function AgendaSidePanel() {
   return (
     <aside className="flex h-full w-80 shrink-0 flex-col border-l bg-card">
       <div className="flex items-center justify-between border-b px-3 py-2">
-        <span className="text-sm font-semibold">Side panel</span>
-        <Button variant="ghost" size="icon" onClick={() => setCollapsed(true)} aria-label="Collapse side panel">
+        <span className="text-sm font-semibold">Panel lateral</span>
+        <Button variant="ghost" size="icon" onClick={() => setCollapsed(true)} aria-label="Colapsar panel lateral">
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
       <Tabs defaultValue="waiting" className="flex flex-1 flex-col">
         <TabsList className="mx-3 mt-3">
           <TabsTrigger value="waiting" className="flex-1">
-            <ListChecks className="h-3.5 w-3.5" /> Waiting list
-          </TabsTrigger>
-          <TabsTrigger value="to-make" className="flex-1">
-            <CalendarPlus className="h-3.5 w-3.5" /> To make
+            <ListChecks className="h-3.5 w-3.5" /> Lista de espera
+           </TabsTrigger>
+           <TabsTrigger value="to-make" className="flex-1">
+             <CalendarPlus className="h-3.5 w-3.5" /> Por agendar
           </TabsTrigger>
         </TabsList>
         <TabsContent value="waiting" className="flex-1 overflow-auto px-3 pb-3">
@@ -66,16 +66,16 @@ function WaitingListPanel() {
   return (
     <div className="space-y-3">
       <div className="text-xs text-muted-foreground">
-        Patients ready to be slotted into a sooner opening.
+        Pacientes listos para agendar en un espacio disponible.
       </div>
       <Button size="sm" variant="outline" onClick={() => setAdding(true)} className="w-full">
-        <Plus className="h-4 w-4" /> Add to waiting list
+        <Plus className="h-4 w-4" /> Agregar a lista de espera
       </Button>
       {adding && <AddWaitingListForm onClose={() => setAdding(false)} />}
 
       {app.waitingList.length === 0 && !adding ? (
         <div className="rounded-md border border-dashed py-6 text-center text-xs text-muted-foreground">
-          Waiting list is empty.
+          La lista de espera está vacía.
         </div>
       ) : (
         <div className="space-y-2">
@@ -92,7 +92,7 @@ function WaitingListRow({ entry }: { entry: WaitingListEntry }) {
   const app = useApp();
   const palette = colorClasses(entry.treatment_color || "sky");
   async function remove() {
-    if (!confirm("Remove from waiting list?")) return;
+    if (!confirm("¿Quitar de la lista de espera?")) return;
     try {
       await api("DELETE", `/api/waiting-list/${entry.id}`);
       await app.refreshSidePanels();
@@ -110,7 +110,7 @@ function WaitingListRow({ entry }: { entry: WaitingListEntry }) {
               <div className="text-xs text-muted-foreground">{formatDate(entry.date_of_birth)}</div>
             )}
           </div>
-          <Button size="icon" variant="ghost" onClick={remove} aria-label="Remove">
+          <Button size="icon" variant="ghost" onClick={remove} aria-label="Quitar">
             <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </div>
@@ -159,7 +159,7 @@ function AddWaitingListForm({ onClose }: { onClose: () => void }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!patientId && !patientLabel.trim()) {
-      app.setError("Type a patient name");
+      app.setError("Escribe un nombre de paciente");
       return;
     }
     setBusy(true);
@@ -169,7 +169,7 @@ function AddWaitingListForm({ onClose }: { onClose: () => void }) {
         const [first, ...rest] = patientLabel.trim().split(/\s+/);
         const created = await app.createPatient({
           first_name: first,
-          last_name: rest.join(" ") || "(unknown)",
+          last_name: rest.join(" ") || "(desconocido)",
         });
         pid = created.id;
       }
@@ -191,12 +191,12 @@ function AddWaitingListForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-2 rounded-md border bg-muted/30 p-3">
-      <FieldSm label="Patient">
+      <FieldSm label="Paciente">
         <div className="relative">
           <Input
             value={patientLabel}
             onChange={(e) => { setPatientLabel(e.target.value); setPatientId(null); }}
-            placeholder="Type a name…"
+            placeholder="Escribe un nombre…"
             className="h-8"
           />
           {results.length > 0 && !patientId && (
@@ -215,37 +215,37 @@ function AddWaitingListForm({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {patientLabel && !patientId && results.length === 0 && (
-            <p className="mt-1 text-[10px] text-muted-foreground">A new patient will be created on save.</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">Se creará un paciente nuevo al guardar.</p>
           )}
         </div>
       </FieldSm>
-      <FieldSm label="Treatment">
+      <FieldSm label="Tratamiento">
         <Select value={treatmentTypeId} onValueChange={setTreatmentTypeId}>
           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">— None —</SelectItem>
+            <SelectItem value="none">— Ninguno —</SelectItem>
             {app.treatmentTypes.map((t) => <SelectItem key={t.id} value={t.id.toString()}>{t.code} · {t.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </FieldSm>
-      <FieldSm label="Practitioner">
+      <FieldSm label="Odontólogo">
         <Select value={practitionerId} onValueChange={setPractitionerId}>
           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">— Any —</SelectItem>
+            <SelectItem value="none">— Cualquiera —</SelectItem>
             {app.practitioners.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </FieldSm>
-      <FieldSm label="Duration (min)">
+      <FieldSm label="Duración (min)">
         <Input type="number" min="5" value={duration} onChange={(e) => setDuration(e.target.value)} className="h-8" />
       </FieldSm>
-      <FieldSm label="Notes">
+      <FieldSm label="Notas">
         <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8" />
       </FieldSm>
       <div className="flex gap-2 pt-1">
-        <Button size="sm" type="submit" disabled={busy} className="flex-1">Add</Button>
-        <Button size="sm" type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button size="sm" type="submit" disabled={busy} className="flex-1">Agregar</Button>
+        <Button size="sm" type="button" variant="outline" onClick={onClose}>Cancelar</Button>
       </div>
     </form>
   );
@@ -265,24 +265,24 @@ function ToMakePanel() {
   return (
     <div className="space-y-3">
       <div className="text-xs text-muted-foreground">
-        Recall and follow-up bookings to schedule.
+        Recordatorios y seguimientos por agendar.
       </div>
       <div className="flex gap-1">
-        <Pill active={filter === "all"} onClick={() => setFilter("all")}>All ({app.appointmentsToMake.length})</Pill>
+        <Pill active={filter === "all"} onClick={() => setFilter("all")}>Todos ({app.appointmentsToMake.length})</Pill>
         {TO_MAKE_SOURCES.map((s) => (
           <Pill key={s} active={filter === s} onClick={() => setFilter(s)}>
-            {capitalize(s)} ({app.appointmentsToMake.filter((a) => a.source === s).length})
+            {sourceLabel(s)} ({app.appointmentsToMake.filter((a) => a.source === s).length})
           </Pill>
         ))}
       </div>
       <Button size="sm" variant="outline" onClick={() => setAdding(true)} className="w-full">
-        <Plus className="h-4 w-4" /> New entry
+        <Plus className="h-4 w-4" /> Nueva entrada
       </Button>
       {adding && <AddToMakeForm onClose={() => setAdding(false)} />}
 
       {visible.length === 0 && !adding ? (
         <div className="rounded-md border border-dashed py-6 text-center text-xs text-muted-foreground">
-          Nothing to schedule.
+          Nada por agendar.
         </div>
       ) : (
         <div className="space-y-2">
@@ -297,7 +297,7 @@ function ToMakeRow({ entry }: { entry: AppointmentToMake }) {
   const app = useApp();
   const palette = colorClasses(entry.treatment_color || "sky");
   async function remove() {
-    if (!confirm("Remove this entry?")) return;
+    if (!confirm("¿Quitar esta entrada?")) return;
     try {
       await api("DELETE", `/api/appointments-to-make/${entry.id}`);
       await app.refreshSidePanels();
@@ -315,7 +315,7 @@ function ToMakeRow({ entry }: { entry: AppointmentToMake }) {
               <div className="text-xs text-muted-foreground">{formatDate(entry.date_of_birth)}</div>
             )}
           </div>
-          <Button size="icon" variant="ghost" onClick={remove} aria-label="Remove">
+          <Button size="icon" variant="ghost" onClick={remove} aria-label="Quitar">
             <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </div>
@@ -326,9 +326,9 @@ function ToMakeRow({ entry }: { entry: AppointmentToMake }) {
               {entry.treatment_name}
             </span>
           )}
-          <span className="text-muted-foreground">via {entry.source}</span>
+          <span className="text-muted-foreground">vía {entry.source}</span>
           {entry.due_after && (
-            <span className="text-muted-foreground">· due after {formatDate(entry.due_after)}</span>
+            <span className="text-muted-foreground">· vence después de {formatDate(entry.due_after)}</span>
           )}
         </div>
         {entry.notes && <p className="text-xs text-muted-foreground">{entry.notes}</p>}
@@ -364,7 +364,7 @@ function AddToMakeForm({ onClose }: { onClose: () => void }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!patientId && !patientLabel.trim()) {
-      app.setError("Type a patient name");
+      app.setError("Escribe un nombre de paciente");
       return;
     }
     setBusy(true);
@@ -374,7 +374,7 @@ function AddToMakeForm({ onClose }: { onClose: () => void }) {
         const [first, ...rest] = patientLabel.trim().split(/\s+/);
         const created = await app.createPatient({
           first_name: first,
-          last_name: rest.join(" ") || "(unknown)",
+          last_name: rest.join(" ") || "(desconocido)",
         });
         pid = created.id;
       }
@@ -396,9 +396,9 @@ function AddToMakeForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-2 rounded-md border bg-muted/30 p-3">
-      <FieldSm label="Patient">
+      <FieldSm label="Paciente">
         <div className="relative">
-          <Input value={patientLabel} onChange={(e) => { setPatientLabel(e.target.value); setPatientId(null); }} placeholder="Type a name…" className="h-8" />
+          <Input value={patientLabel} onChange={(e) => { setPatientLabel(e.target.value); setPatientId(null); }} placeholder="Escribe un nombre…" className="h-8" />
           {results.length > 0 && !patientId && (
             <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
               {results.map((p) => (
@@ -411,32 +411,32 @@ function AddToMakeForm({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </FieldSm>
-      <FieldSm label="Treatment">
+      <FieldSm label="Tratamiento">
         <Select value={treatmentTypeId} onValueChange={setTreatmentTypeId}>
           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">— None —</SelectItem>
+            <SelectItem value="none">— Ninguno —</SelectItem>
             {app.treatmentTypes.map((t) => <SelectItem key={t.id} value={t.id.toString()}>{t.code} · {t.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </FieldSm>
-      <FieldSm label="Source">
+      <FieldSm label="Origen">
         <Select value={source} onValueChange={(v) => setSource(v as ToMakeSource)}>
           <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {TO_MAKE_SOURCES.map((s) => <SelectItem key={s} value={s}>{capitalize(s)}</SelectItem>)}
+            {TO_MAKE_SOURCES.map((s) => <SelectItem key={s} value={s}>{sourceLabel(s)}</SelectItem>)}
           </SelectContent>
         </Select>
       </FieldSm>
-      <FieldSm label="Due after">
+      <FieldSm label="Vence después de">
         <Input type="date" value={dueAfter} onChange={(e) => setDueAfter(e.target.value)} className="h-8" />
       </FieldSm>
-      <FieldSm label="Notes">
+      <FieldSm label="Notas">
         <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8" />
       </FieldSm>
       <div className="flex gap-2 pt-1">
-        <Button size="sm" type="submit" disabled={busy} className="flex-1">Add</Button>
-        <Button size="sm" type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button size="sm" type="submit" disabled={busy} className="flex-1">Agregar</Button>
+        <Button size="sm" type="button" variant="outline" onClick={onClose}>Cancelar</Button>
       </div>
     </form>
   );
@@ -466,6 +466,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function sourceLabel(s: string): string {
+  const map: Record<string, string> = { reception: "Recepción", patient: "Paciente", system: "Sistema" };
+  return map[s] ?? s;
 }

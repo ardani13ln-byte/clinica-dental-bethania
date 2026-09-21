@@ -12,7 +12,7 @@ import {
 type Env = { Bindings: { DB: D1Database } };
 
 const app = createApp<Env>({
-  title: "OpenDentist",
+  title: "Clínica Dental Bethania",
   version: "1.0.0",
   description: "Dental practice management: patients, appointments, operatories, treatments, and billing.",
 });

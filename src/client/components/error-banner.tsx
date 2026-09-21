@@ -11,7 +11,7 @@ export function ErrorBanner() {
         type="button"
         onClick={() => setError(null)}
         className="opacity-80 hover:opacity-100"
-        aria-label="Dismiss"
+        aria-label="Cerrar"
       >
         <X className="h-4 w-4" />
       </button>

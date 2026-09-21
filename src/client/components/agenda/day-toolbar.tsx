@@ -19,7 +19,7 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-3 border-b bg-white px-6 py-4">
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b bg-white px-6 py-4">
       <div>
         <h2 className="text-lg font-semibold tracking-tight">
           {formatDate(date, { month: "long", year: "numeric" })}
@@ -35,7 +35,7 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
           <button
             type="button"
             onClick={() => shift(-1)}
-            aria-label="Previous day"
+            aria-label="Día anterior"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -48,12 +48,12 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
               (isToday ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")
             }
           >
-            Today
+            Hoy
           </button>
           <button
             type="button"
             onClick={() => shift(1)}
-            aria-label="Next day"
+            aria-label="Día siguiente"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent"
           >
             <ChevronRight className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
         <div className="h-6 w-px bg-border" />
 
         <Button onClick={onCreate} size="sm">
-          <Plus className="h-4 w-4" /> Add appointment
+          <Plus className="h-4 w-4" /> Nueva cita
         </Button>
       </div>
     </div>

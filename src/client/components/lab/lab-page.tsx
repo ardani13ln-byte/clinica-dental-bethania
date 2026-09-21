@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDate } from "@/lib/utils";
 import type { LabCase, LabStatus, Patient } from "@/types";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 const STATUSES: LabStatus[] = ["sent", "in_lab", "received", "seated", "cancelled"];
-const CASE_TYPES = ["Crown", "Bridge", "Inlay/Onlay", "Veneer", "Denture", "Partial", "Aligner", "Night Guard", "Implant Abutment", "Other"];
+const CASE_TYPES = ["Corona", "Puente", "Inlay/Onlay", "Facheta", "Dentadura", "Parcial", "Alineador", "Protector nocturno", "Pilar de implante", "Otro"];
 
 const STATUS_STYLE: Record<LabStatus, string> = {
   sent:      "bg-amber-100 text-amber-800 border-amber-200",
@@ -71,7 +72,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this lab case?")) return;
+    if (!confirm("¿Eliminar este caso de laboratorio?")) return;
     try {
       await api("DELETE", `/api/lab-cases/${id}`);
       setCases((prev) => prev.filter((c) => c.id !== id));
@@ -82,28 +83,28 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
         <h1 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <FlaskConical className="h-5 w-5" /> Lab cases
+          <FlaskConical className="h-5 w-5" /> Casos de laboratorio
         </h1>
         <div className="ml-auto flex items-center gap-2">
           {overdueCount > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
               <AlertTriangle className="h-3 w-3" />
-              {overdueCount} overdue
+              {overdueCount} vencido
             </span>
           )}
           <div className="w-44">
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LabStatus | "all")}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">Todos los estados</SelectItem>
                 {STATUSES.map((s) => <SelectItem key={s} value={s}>{labelFor(s)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <Button onClick={() => setCreating(true)} size="sm">
-            <Plus className="h-4 w-4" /> New case
+            <Plus className="h-4 w-4" /> Nuevo caso
           </Button>
         </div>
       </div>
@@ -112,21 +113,21 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
             ) : cases.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">No lab cases yet.</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">Aún no hay casos de laboratorio.</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-3 py-2 font-semibold">Patient</th>
-                    <th className="px-3 py-2 font-semibold">Lab</th>
-                    <th className="px-3 py-2 font-semibold">Case</th>
-                    <th className="px-3 py-2 font-semibold">Tooth</th>
-                    <th className="px-3 py-2 font-semibold">Sent</th>
-                    <th className="px-3 py-2 font-semibold">Due</th>
-                    <th className="px-3 py-2 text-right font-semibold">Fee</th>
-                    <th className="px-3 py-2 font-semibold">Status</th>
+                    <th className="px-3 py-2 font-semibold">Paciente</th>
+                    <th className="px-3 py-2 font-semibold">Laboratorio</th>
+                    <th className="px-3 py-2 font-semibold">Caso</th>
+                    <th className="px-3 py-2 font-semibold">Diente</th>
+                    <th className="px-3 py-2 font-semibold">Enviado</th>
+                    <th className="px-3 py-2 font-semibold">Vence</th>
+                    <th className="px-3 py-2 text-right font-semibold">Tarifa</th>
+                    <th className="px-3 py-2 font-semibold">Estado</th>
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
@@ -156,7 +157,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
                         <td className={cn("px-3 py-2", overdue ? "font-semibold text-rose-700" : "text-muted-foreground")}>
                           {c.due_at ? formatDate(c.due_at) : "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums">${c.fee.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">Q{c.fee.toFixed(2)}</td>
                         <td className="px-3 py-2">
                           <Select value={c.status} onValueChange={(v) => setStatus(c.id, v as LabStatus)}>
                             <SelectTrigger className={cn("h-7 w-[120px] text-xs", STATUS_STYLE[c.status])}>
@@ -168,7 +169,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
                           </Select>
                         </td>
                         <td className="px-3 py-2 text-right">
-                          <Button size="icon" variant="ghost" onClick={() => remove(c.id)} aria-label="Delete">
+                          <Button size="icon" variant="ghost" onClick={() => remove(c.id)} aria-label="Eliminar">
                             <Trash2 className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </td>
@@ -196,13 +197,19 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
           setEditing(null);
         }}
       />
+
+      <MobileFAB onClick={() => setCreating(true)} label="Nuevo caso" />
     </div>
   );
 }
 
 function labelFor(s: LabStatus): string {
-  if (s === "in_lab") return "In lab";
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  if (s === "sent") return "Enviado";
+  if (s === "in_lab") return "En laboratorio";
+  if (s === "received") return "Recibido";
+  if (s === "seated") return "Colocado";
+  if (s === "cancelled") return "Cancelado";
+  return s;
 }
 
 // ── Lab case dialog ────────────────────────────────────────────────
@@ -220,7 +227,7 @@ function LabCaseDialog({
   const [patientLabel, setPatientLabel] = useState("");
   const [results, setResults] = useState<Patient[]>([]);
   const [labName, setLabName] = useState("");
-  const [caseType, setCaseType] = useState("Crown");
+  const [caseType, setCaseType] = useState("Corona");
   const [tooth, setTooth] = useState("");
   const [shade, setShade] = useState("");
   const [fee, setFee] = useState("");
@@ -248,7 +255,7 @@ function LabCaseDialog({
       setPatientId(null);
       setPatientLabel("");
       setLabName("");
-      setCaseType("Crown");
+      setCaseType("Corona");
       setTooth("");
       setShade("");
       setFee("");
@@ -307,16 +314,16 @@ function LabCaseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{caseRow ? "Edit lab case" : "New lab case"}</DialogTitle>
+          <DialogTitle>{caseRow ? "Editar caso" : "Nuevo caso"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Patient *</Label>
+            <Label>Paciente *</Label>
             <div className="relative">
               <Input
                 value={patientLabel}
                 onChange={(e) => { setPatientLabel(e.target.value); setPatientId(null); }}
-                placeholder="Type a name…"
+                placeholder="Escribe un nombre…"
               />
               {results.length > 0 && !patientId && (
                 <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md">
@@ -334,16 +341,16 @@ function LabCaseDialog({
                 </div>
               )}
               {patientLabel && !patientId && results.length === 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">A new patient will be created on save.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Se creará un paciente nuevo al guardar.</p>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Lab *">
-              <Input value={labName} onChange={(e) => setLabName(e.target.value)} placeholder="e.g. Glidewell" required />
+            <Field label="Laboratorio *">
+              <Input value={labName} onChange={(e) => setLabName(e.target.value)} placeholder="ej. Glidewell" required />
             </Field>
-            <Field label="Case type">
+            <Field label="Tipo de caso">
               <Select value={caseType} onValueChange={setCaseType}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -354,32 +361,32 @@ function LabCaseDialog({
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Tooth"><Input value={tooth} onChange={(e) => setTooth(e.target.value)} placeholder="e.g. 14" /></Field>
-            <Field label="Shade"><Input value={shade} onChange={(e) => setShade(e.target.value)} placeholder="e.g. A2" /></Field>
-            <Field label="Fee"><Input type="number" min="0" step="0.01" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
+            <Field label="Diente"><Input value={tooth} onChange={(e) => setTooth(e.target.value)} placeholder="ej. 14" /></Field>
+            <Field label="Tono"><Input value={shade} onChange={(e) => setShade(e.target.value)} placeholder="ej. A2" /></Field>
+            <Field label="Tarifa"><Input type="number" min="0" step="0.01" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Sent"><Input type="date" value={sentAt} onChange={(e) => setSentAt(e.target.value)} /></Field>
-            <Field label="Due"><Input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></Field>
-            <Field label="Practitioner">
+            <Field label="Enviado"><Input type="date" value={sentAt} onChange={(e) => setSentAt(e.target.value)} /></Field>
+            <Field label="Vence"><Input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></Field>
+            <Field label="Odontólogo">
               <Select value={practitionerId} onValueChange={setPractitionerId}>
-                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— None —</SelectItem>
+                  <SelectItem value="none">— Ninguno —</SelectItem>
                   {app.practitioners.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
           </div>
 
-          <Field label="Notes">
+          <Field label="Notas">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </Field>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : caseRow ? "Save" : "Create"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancelar</Button>
+            <Button type="submit" disabled={busy}>{busy ? "Guardando…" : caseRow ? "Guardar" : "Crear"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

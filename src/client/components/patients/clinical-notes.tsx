@@ -51,7 +51,7 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
   }
 
   async function remove(id: number) {
-    if (!confirm("Delete this note?")) return;
+    if (!confirm("¿Eliminar esta nota?")) return;
     try {
       await api("DELETE", `/api/clinical-notes/${id}`);
       setNotes((prev) => prev.filter((n) => n.id !== id));
@@ -64,7 +64,7 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Add note</CardTitle>
+          <CardTitle>Agregar nota</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={addNote} className="space-y-2">
@@ -72,16 +72,16 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
-              placeholder="Subjective, objective, assessment, plan…"
+              placeholder="Subjetivo, objetivo, evaluación, plan…"
             />
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-full max-w-xs">
                 <Select value={practitionerId} onValueChange={setPractitionerId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Practitioner…" />
+                    <SelectValue placeholder="Odontólogo…" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">— No practitioner —</SelectItem>
+                    <SelectItem value="none">— Sin odontólogo —</SelectItem>
                     {app.practitioners.map((p) => (
                       <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                     ))}
@@ -90,7 +90,7 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
               </div>
               <Button type="submit" disabled={adding || !body.trim()} className="ml-auto">
                 <Plus className="h-4 w-4" />
-                Add note
+                Agregar nota
               </Button>
             </div>
           </form>
@@ -98,11 +98,11 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
       </Card>
 
       {loading ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">Loading…</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>
       ) : notes.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No clinical notes yet.
+            Aún no hay notas clínicas.
           </CardContent>
         </Card>
       ) : (
@@ -115,17 +115,17 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
                     {formatDate(n.note_date, { year: "numeric", month: "short", day: "numeric" })}
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    {new Date(n.note_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(n.note_date).toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>
                 <div className="flex-1">
                   <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
                     <User className="h-3.5 w-3.5" />
-                    {n.practitioner_name || "Unattributed"}
+                    {n.practitioner_name || "Sin atribuir"}
                   </div>
                   <p className="whitespace-pre-wrap text-sm">{n.body}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => remove(n.id)} aria-label="Delete">
+                <Button variant="ghost" size="icon" onClick={() => remove(n.id)} aria-label="Eliminar">
                   <Trash2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </CardContent>
