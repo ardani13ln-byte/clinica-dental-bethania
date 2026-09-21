@@ -7,6 +7,7 @@ export type Route =
   | { name: "reports" }
   | { name: "lab" }
   | { name: "settings" }
+  | { name: "legal"; type: "terminos" | "privacidad" | "cookies" | "arco" }
   | { name: "not-found" };
 
 function parse(path: string): Route {
@@ -17,6 +18,10 @@ function parse(path: string): Route {
   if (path === "/reports") return { name: "reports" };
   if (path === "/lab") return { name: "lab" };
   if (path === "/settings") return { name: "settings" };
+  if (path === "/legal/terminos") return { name: "legal", type: "terminos" };
+  if (path === "/legal/privacidad") return { name: "legal", type: "privacidad" };
+  if (path === "/legal/cookies") return { name: "legal", type: "cookies" };
+  if (path === "/legal/arco") return { name: "legal", type: "arco" };
   return { name: "not-found" };
 }
 

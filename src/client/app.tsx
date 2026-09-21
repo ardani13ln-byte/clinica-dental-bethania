@@ -11,6 +11,7 @@ import { PatientPage } from "./components/patients/patient-page";
 import { ReportsPage } from "./components/reports/reports-page";
 import { LabPage } from "./components/lab/lab-page";
 import { SettingsPage } from "./components/settings/settings-page";
+import { LegalPage } from "./components/legal-page";
 
 export function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
@@ -51,6 +52,7 @@ function MainApp({ signOut, userEmail }: { signOut: () => Promise<void>; userEma
               {route.name === "reports" && <ReportsPage />}
               {route.name === "lab" && <LabPage navigate={navigate} />}
               {route.name === "settings" && <SettingsPage />}
+              {route.name === "legal" && <LegalPage type={route.type} />}
               {route.name === "not-found" && (
                 <Placeholder title="No encontrado" message="Esa página no existe." />
               )}

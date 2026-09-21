@@ -76,6 +76,16 @@ export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: st
             {loading ? "Iniciando sesión…" : "Iniciar sesión"}
           </Button>
         </form>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+          <a href="/legal/terminos" className="hover:text-foreground">Términos</a>
+          <span>·</span>
+          <a href="/legal/privacidad" className="hover:text-foreground">Privacidad</a>
+          <span>·</span>
+          <a href="/legal/cookies" className="hover:text-foreground">Cookies</a>
+          <span>·</span>
+          <a href="/legal/arco" className="hover:text-foreground">Derechos ARCO</a>
+        </div>
       </div>
     </div>
   );
