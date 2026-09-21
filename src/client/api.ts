@@ -1,4 +1,153 @@
 import { supabase } from "./supabase-client";
+import { z } from "zod";
+
+// ── Zod Schemas ───────────────────────────────────────────────────
+
+const str = z.string().trim();
+const optStr = z.string().trim().nullable().optional();
+const optNum = z.number().nullable().optional();
+
+const PatientSchema = z.object({
+  first_name: str.min(1).max(100),
+  last_name: str.min(1).max(100),
+  date_of_birth: optStr,
+  email: optStr,
+  phone: optStr,
+  address: optStr,
+  medical_alerts: optStr,
+  notes: optStr,
+  referral_source: optStr,
+});
+
+const AppointmentSchema = z.object({
+  patient_id: optNum,
+  practitioner_id: optNum,
+  operatory_id: z.number(),
+  treatment_type_id: optNum,
+  start_time: str.min(1),
+  end_time: str.min(1),
+  status: z.enum(["scheduled", "confirmed", "completed", "cancelled", "no_show", "in_chair"]).optional(),
+  kind: z.enum(["patient", "block"]).optional(),
+  title: optStr,
+  notes: optStr,
+});
+
+const TreatmentTypeSchema = z.object({
+  code: str.min(1).max(20),
+  name: str.min(1).max(100),
+  duration_minutes: z.number().int().min(1).max(600).optional(),
+  default_fee: z.number().min(0).optional(),
+  color: str.max(50).optional(),
+});
+
+const PractitionerSchema = z.object({
+  name: str.min(1).max(100),
+  role: z.enum(["dentist", "hygienist", "assistant", "receptionist"]).optional(),
+  color: str.max(50).optional(),
+  email: optStr,
+  phone: optStr,
+});
+
+const OperatorySchema = z.object({
+  name: str.min(1).max(100),
+  color: str.max(50).optional(),
+  sort_order: z.number().int().optional(),
+});
+
+const PlanItemSchema = z.object({
+  patient_id: z.number().int(),
+  treatment_type_id: optNum,
+  tooth: optStr,
+  surface: optStr,
+  fee: z.number().min(0).optional(),
+  status: z.enum(["planned", "approved", "completed", "cancelled"]).optional(),
+  notes: optStr,
+  sort_order: z.number().int().optional(),
+});
+
+const NoteSchema = z.object({
+  patient_id: z.number().int(),
+  practitioner_id: optNum,
+  note_date: optStr,
+  body: str.min(1),
+});
+
+const ToothConditionSchema = z.object({
+  patient_id: z.number().int(),
+  tooth: str.min(1).max(5),
+  surface: optStr,
+  condition: str.min(1).max(50),
+});
+
+const InvoiceSchema = z.object({
+  patient_id: z.number().int(),
+  appointment_id: optNum,
+  status: z.enum(["open", "paid", "void", "partial"]).optional(),
+  total: z.number().min(0).optional(),
+  amount_paid: z.number().min(0).optional(),
+  notes: optStr,
+});
+
+const WaitingListSchema = z.object({
+  patient_id: z.number().int(),
+  treatment_type_id: optNum,
+  preferred_practitioner_id: optNum,
+  duration_minutes: z.number().int().min(1).max(600).optional(),
+  notes: optStr,
+});
+
+const ToMakeSchema = z.object({
+  patient_id: z.number().int(),
+  treatment_type_id: optNum,
+  due_after: optStr,
+  source: str.max(50).optional(),
+  notes: optStr,
+  status: z.enum(["open", "done", "cancelled"]).optional(),
+});
+
+const InsuranceSchema = z.object({
+  patient_id: z.number().int(),
+  rank: z.enum(["primary", "secondary", "tertiary"]).optional(),
+  carrier: str.min(1).max(100),
+  member_id: optStr,
+  group_id: optStr,
+  subscriber_name: optStr,
+  subscriber_dob: optStr,
+  effective_date: optStr,
+  term_date: optStr,
+  copay: z.number().min(0).optional(),
+  deductible_total: z.number().min(0).optional(),
+  deductible_used: z.number().min(0).optional(),
+  max_annual: z.number().min(0).optional(),
+  max_used: z.number().min(0).optional(),
+  notes: optStr,
+});
+
+const LabCaseSchema = z.object({
+  patient_id: z.number().int(),
+  practitioner_id: optNum,
+  treatment_type_id: optNum,
+  lab_name: str.min(1).max(100),
+  case_type: str.min(1).max(100),
+  tooth: optStr,
+  shade: optStr,
+  fee: z.number().min(0).optional(),
+  sent_at: optStr,
+  due_at: optStr,
+  received_at: optStr,
+  seated_at: optStr,
+  status: z.enum(["sent", "received", "seated", "cancelled"]).optional(),
+  notes: optStr,
+});
+
+function validate<T>(schema: z.ZodSchema<T>, data: unknown, label: string): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const first = result.error.issues[0];
+    throw new Error(`Validación ${label}: ${first.path.join(".")} — ${first.message}`);
+  }
+  return result.data;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -112,7 +261,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { operatories: data } as T;
   }
   if (path === "/api/operatories" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(OperatorySchema, body, "operatory");
     let sortOrder = d.sort_order as number | undefined;
     if (sortOrder === undefined) {
       const { data: max } = await supabase.from("operatories").select("sort_order").order("sort_order", { ascending: false }).limit(1);
@@ -146,7 +295,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { practitioners: data } as T;
   }
   if (path === "/api/practitioners" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(PractitionerSchema, body, "practitioner");
     const { data, error } = await supabase.from("practitioners").insert({
       name: d.name,
       role: d.role ?? "dentist",
@@ -177,7 +326,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { treatment_types: data } as T;
   }
   if (path === "/api/treatment-types" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(TreatmentTypeSchema, body, "treatment type");
     const { data, error } = await supabase.from("treatment_types").insert({
       code: d.code,
       name: d.name,
@@ -251,7 +400,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     }
   }
   if (path === "/api/patients" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(PatientSchema, body, "patient");
     const { data, error } = await supabase.from("patients").insert({
       first_name: d.first_name,
       last_name: d.last_name,
@@ -303,7 +452,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { appointments: (data || []).map(flattenAppointment) } as T;
   }
   if (path === "/api/appointments" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(AppointmentSchema, body, "appointment");
     const { data, error } = await supabase.from("appointments").insert({
       patient_id: d.patient_id ?? null,
       practitioner_id: d.practitioner_id ?? null,
@@ -334,7 +483,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Treatment plan items ──
   if (path === "/api/treatment-plan-items" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(PlanItemSchema, body, "plan item");
     let sortOrder = d.sort_order as number | undefined;
     if (sortOrder === undefined) {
       const { data: max } = await supabase.from("treatment_plan_items").select("sort_order").eq("patient_id", d.patient_id as number).order("sort_order", { ascending: false }).limit(1);
@@ -368,7 +517,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Clinical notes ──
   if (path === "/api/clinical-notes" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(NoteSchema, body, "clinical note");
     const { data, error } = await supabase.from("clinical_notes").insert({
       patient_id: d.patient_id,
       practitioner_id: d.practitioner_id ?? null,
@@ -387,7 +536,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Tooth conditions ──
   if (path === "/api/tooth-conditions" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(ToothConditionSchema, body, "tooth condition");
     const { data, error } = await supabase.from("tooth_conditions").insert({
       patient_id: d.patient_id,
       tooth: d.tooth,
@@ -406,7 +555,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Invoices ──
   if (path === "/api/invoices" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(InvoiceSchema, body, "invoice");
     const { data, error } = await supabase.from("invoices").insert({
       patient_id: d.patient_id,
       appointment_id: d.appointment_id ?? null,
@@ -438,7 +587,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { waiting: (data || []).map(flattenWaiting) } as T;
   }
   if (path === "/api/waiting-list" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(WaitingListSchema, body, "waiting list");
     const { data, error } = await supabase.from("waiting_list").insert({
       patient_id: d.patient_id,
       treatment_type_id: d.treatment_type_id ?? null,
@@ -467,7 +616,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { to_make: (data || []).map(flattenToMake) } as T;
   }
   if (path === "/api/appointments-to-make" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(ToMakeSchema, body, "appointment to make");
     const { data, error } = await supabase.from("appointments_to_make").insert({
       patient_id: d.patient_id,
       treatment_type_id: d.treatment_type_id ?? null,
@@ -494,7 +643,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Insurance plans ──
   if (path === "/api/insurance-plans" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(InsuranceSchema, body, "insurance plan");
     const { data, error } = await supabase.from("insurance_plans").insert({
       patient_id: d.patient_id,
       rank: d.rank ?? "primary",
@@ -539,7 +688,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { cases: (data || []).map(flattenLabCase) } as T;
   }
   if (path === "/api/lab-cases" && method === "POST") {
-    const d = body as Record<string, unknown>;
+    const d = validate(LabCaseSchema, body, "lab case");
     const { data, error } = await supabase.from("lab_cases").insert({
       patient_id: d.patient_id,
       practitioner_id: d.practitioner_id ?? null,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -11,24 +11,70 @@ function ToothIcon({ className }: { className?: string }) {
   );
 }
 
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: Record<string, unknown>) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
 export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: string) => Promise<void> }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const hasTurnstile = !!TURNSTILE_SITE_KEY;
+
+  useEffect(() => {
+    if (!hasTurnstile || !turnstileRef.current) return;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.turnstile && turnstileRef.current) {
+        widgetId.current = window.turnstile.render(turnstileRef.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token: string) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(null),
+          "error-callback": () => setTurnstileToken(null),
+        });
+      }
+    };
+    document.head.appendChild(script);
+    return () => {
+      if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
+    };
+  }, [hasTurnstile]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (hasTurnstile && !turnstileToken) {
+      setError("Verificación antibot pendiente. Espera un momento.");
+      return;
+    }
     setLoading(true);
     try {
       await onSignIn(email, password);
     } catch (err) {
       setError((err as Error).message);
+      if (widgetId.current && window.turnstile) {
+        window.turnstile.reset(widgetId.current);
+        setTurnstileToken(null);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, hasTurnstile, turnstileToken, onSignIn]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sky-50 to-teal-50 px-4">
@@ -68,11 +114,13 @@ export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: st
             />
           </div>
 
+          {hasTurnstile && <div ref={turnstileRef} />}
+
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || (hasTurnstile && !turnstileToken)}>
             {loading ? "Iniciando sesión…" : "Iniciar sesión"}
           </Button>
         </form>
