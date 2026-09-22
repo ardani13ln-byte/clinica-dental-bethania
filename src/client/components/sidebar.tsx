@@ -1,13 +1,11 @@
+import { useState, useEffect } from "react";
 import {
-  Calendar,
-  Users,
-  Settings,
-  FileBarChart2,
-  FlaskConical,
-  LogOut,
+  Calendar, Users, Settings, FileBarChart2, FlaskConical,
+  LogOut, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Route } from "@/hooks/use-router";
+import { api } from "../api";
 
 function ToothIcon({ className }: { className?: string }) {
   return (
@@ -17,31 +15,26 @@ function ToothIcon({ className }: { className?: string }) {
   );
 }
 
+const iconMap: Record<string, typeof Calendar> = {
+  calendar: Calendar, users: Users, "bar-chart": FileBarChart2,
+  flask: FlaskConical, settings: Settings, shield: Shield,
+};
+
 interface NavItem {
   label: string;
   icon: typeof Calendar;
-  path?: string;
-  match?: (r: Route) => boolean;
-  disabled?: boolean;
+  path: string;
+  match: (r: Route) => boolean;
 }
 
-const sections: { heading: string; items: NavItem[] }[] = [
-  {
-    heading: "Clínica",
-    items: [
-      { label: "Agenda",     icon: Calendar,      path: "/agenda",   match: (r) => r.name === "agenda" },
-      { label: "Pacientes",  icon: Users,         path: "/patients", match: (r) => r.name === "patients" || r.name === "patient" },
-      { label: "Casos de laboratorio", icon: FlaskConical, path: "/lab", match: (r) => r.name === "lab" },
-    ],
-  },
-  {
-    heading: "Administración",
-    items: [
-      { label: "Reportes",  icon: FileBarChart2, path: "/reports",  match: (r) => r.name === "reports" },
-      { label: "Configuración", icon: Settings,  path: "/settings", match: (r) => r.name === "settings" },
-    ],
-  },
-];
+const allItems: Record<string, NavItem> = {
+  agenda:     { label: "Agenda",              icon: Calendar,       path: "/agenda",   match: (r) => r.name === "agenda" },
+  patients:   { label: "Pacientes",           icon: Users,          path: "/patients", match: (r) => r.name === "patients" || r.name === "patient" },
+  lab:        { label: "Casos de laboratorio",icon: FlaskConical,   path: "/lab",      match: (r) => r.name === "lab" },
+  reports:    { label: "Reportes",            icon: FileBarChart2,  path: "/reports",  match: (r) => r.name === "reports" },
+  settings:   { label: "Configuración",       icon: Settings,       path: "/settings", match: (r) => r.name === "settings" },
+  admin:      { label: "Administración",      icon: Shield,         path: "/admin",    match: (r) => r.name === "admin" },
+};
 
 export function Sidebar({
   route,
@@ -54,6 +47,43 @@ export function Sidebar({
   signOut: () => Promise<void>;
   userEmail: string;
 }) {
+  const [enabledKeys, setEnabledKeys] = useState<Set<string>>(new Set(Object.keys(allItems)));
+
+  useEffect(() => {
+    api<{ modules: { key: string; enabled: boolean }[] }>("GET", "/api/modules")
+      .then((data) => {
+        if (data.modules?.length) {
+          setEnabledKeys(new Set(data.modules.filter(m => m.enabled).map(m => m.key)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const clinicKeys = ["agenda", "patients", "lab"];
+  const adminKeys = ["reports", "settings", "admin"];
+
+  const renderItem = (key: string) => {
+    const item = allItems[key];
+    if (!item || !enabledKeys.has(key)) return null;
+    const active = item.match(route);
+    return (
+      <li key={key}>
+        <button
+          type="button"
+          onClick={() => navigate(item.path)}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            active && "bg-sidebar-accent text-sidebar-accent-foreground",
+            !active && "hover:bg-sidebar-accent/60",
+          )}
+        >
+          <item.icon className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">{item.label}</span>
+        </button>
+      </li>
+    );
+  };
+
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex h-14 items-center gap-2 border-b px-4">
@@ -64,42 +94,18 @@ export function Sidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {sections.map((section) => (
-          <div key={section.heading} className="mb-4">
-            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {section.heading}
-            </div>
-            <ul className="space-y-0.5">
-              {section.items.map((item) => {
-                const active = item.match ? item.match(route) : false;
-                const isDisabled = !!item.disabled;
-                return (
-                  <li key={item.label}>
-                    <button
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => item.path && navigate(item.path)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                        active && "bg-sidebar-accent text-sidebar-accent-foreground",
-                        !active && !isDisabled && "hover:bg-sidebar-accent/60",
-                        isDisabled && "cursor-not-allowed text-muted-foreground/60",
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {isDisabled && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Próximamente
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+        <div className="mb-4">
+          <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Clínica</div>
+          <ul className="space-y-0.5">
+            {clinicKeys.map(renderItem)}
+          </ul>
+        </div>
+        <div className="mb-4">
+          <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Administración</div>
+          <ul className="space-y-0.5">
+            {adminKeys.map(renderItem)}
+          </ul>
+        </div>
       </nav>
 
       <div className="border-t px-3 py-3">

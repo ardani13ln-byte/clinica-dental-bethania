@@ -834,5 +834,72 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { ok: true } as T;
   }
 
+  // ── Modules (superadmin) ──
+  if (path === "/api/modules" && method === "GET") {
+    const { data, error } = await supabase.from("modules").select("*").order("sort_order");
+    checkError({ error }, "modules");
+    return { modules: data } as T;
+  }
+  if (path.startsWith("/api/modules/") && method === "PUT") {
+    const id = parseInt(path.split("/")[3], 10);
+    const d = body as Record<string, unknown>;
+    const { data, error } = await supabase.from("modules").update({
+      enabled: d.enabled,
+      updated_at: nowStr(),
+    }).eq("id", id).select("*").single();
+    checkError({ error }, "module update");
+    return { module: data } as T;
+  }
+
+  // ── System logs (superadmin) ──
+  if (path === "/api/system-logs" && method === "GET") {
+    const qs = path.split("?")[1] || "";
+    const params = new URLSearchParams(qs);
+    const level = params.get("level");
+    const limit = parseInt(params.get("limit") || "200", 10);
+    let q = supabase.from("system_logs").select("*").order("created_at", { ascending: false }).limit(limit);
+    if (level && level !== "all") q = q.eq("level", level);
+    const { data, error } = await q;
+    checkError({ error }, "system logs");
+    return { logs: data } as T;
+  }
+  if (path === "/api/system-logs" && method === "POST") {
+    const d = body as Record<string, unknown>;
+    const { data, error } = await supabase.from("system_logs").insert({
+      level: d.level ?? "info",
+      category: d.category ?? "system",
+      message: d.message,
+      user_email: d.user_email ?? null,
+      metadata: d.metadata ?? {},
+    }).select("*").single();
+    checkError({ error }, "log insert");
+    return { log: data } as T;
+  }
+  if (path.startsWith("/api/system-logs/") && method === "DELETE") {
+    const id = parseInt(path.split("/")[3], 10);
+    const { error } = await supabase.from("system_logs").delete().eq("id", id);
+    checkError({ error }, "log delete");
+    return { ok: true } as T;
+  }
+
+  // ── Profiles (superadmin) ──
+  if (path === "/api/profiles" && method === "GET") {
+    const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    checkError({ error }, "profiles");
+    return { profiles: data } as T;
+  }
+  if (path.startsWith("/api/profiles/") && method === "PUT") {
+    const id = path.split("/")[3];
+    const d = body as Record<string, unknown>;
+    const { data, error } = await supabase.from("profiles").update({
+      role: d.role,
+      active: d.active,
+      full_name: d.full_name,
+      updated_at: nowStr(),
+    }).eq("id", id).select("*").single();
+    checkError({ error }, "profile update");
+    return { profile: data } as T;
+  }
+
   throw new Error(`Unhandled API route: ${method} ${path}`);
 }
