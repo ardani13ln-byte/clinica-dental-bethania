@@ -3,8 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY || "";
 
-export default async function handler(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
+export default async function handler(req, res) {
+  const cookieHeader = req.headers.cookie || "";
   const cookies = Object.fromEntries(
     cookieHeader.split("; ").filter(c => c).map(c => {
       const [k, ...v] = c.split("=");
@@ -14,12 +14,13 @@ export default async function handler(req) {
 
   const accessToken = cookies["sb-access-token"];
   if (!accessToken) {
-    return new Response(JSON.stringify({ user: null }), { status: 200 });
+    res.status(200).json({ user: null });
+    return;
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
   });
   const { data } = await supabase.auth.getUser();
-  return new Response(JSON.stringify({ user: data.user }), { status: 200 });
+  res.status(200).json({ user: data.user });
 }

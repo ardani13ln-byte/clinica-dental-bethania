@@ -15,34 +15,31 @@ async function verifyTurnstile(token, ip) {
   return data.success === true;
 }
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
-  const body = await req.json();
-  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
+  const { email, password, turnstileToken } = req.body;
+  const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "";
 
-  if (TURNSTILE_SECRET && body.turnstileToken && !await verifyTurnstile(body.turnstileToken, ip)) {
-    return new Response(JSON.stringify({ error: "Verificación antibot fallida" }), { status: 403 });
+  if (TURNSTILE_SECRET && turnstileToken && !await verifyTurnstile(turnstileToken, ip)) {
+    res.status(403).json({ error: "Verificación antibot fallida" });
+    return;
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: body.email,
-    password: body.password,
-  });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    res.status(401).json({ error: error.message });
+    return;
   }
 
-  const res = new Response(JSON.stringify({ user: data.user }), { status: 200 });
-  if (data.session) {
-    res.headers.set("Set-Cookie", [
-      `sb-access-token=${data.session.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`,
-      `sb-refresh-token=${data.session.refresh_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`,
-    ].join(", "));
-  }
-  return res;
+  res.setHeader("Set-Cookie", [
+    `sb-access-token=${data.session.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`,
+    `sb-refresh-token=${data.session.refresh_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`,
+  ]);
+  res.status(200).json({ user: data.user });
 }

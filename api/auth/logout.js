@@ -1,8 +1,7 @@
-export default async function handler() {
-  const res = new Response(JSON.stringify({ ok: true }), { status: 200 });
-  res.headers.set("Set-Cookie", [
+export default async function handler(req, res) {
+  res.setHeader("Set-Cookie", [
     "sb-access-token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
     "sb-refresh-token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
-  ].join(", "));
-  return res;
+  ]);
+  res.status(200).json({ ok: true });
 }
