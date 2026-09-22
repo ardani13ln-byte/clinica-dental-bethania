@@ -11,7 +11,7 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token, remoteip: ip }),
   });
-  const data = await res.json();
+  const data = await res.json() as { success: boolean };
   return data.success === true;
 }
 
@@ -20,21 +20,24 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
   }
 
-  const { email, password, turnstileToken } = await req.json();
+  const body = await req.json() as { email: string; password: string; turnstileToken?: string };
   const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
 
-  if (TURNSTILE_SECRET && !await verifyTurnstile(turnstileToken, ip)) {
+  if (TURNSTILE_SECRET && body.turnstileToken && !await verifyTurnstile(body.turnstileToken, ip)) {
     return new Response(JSON.stringify({ error: "Verificación antibot fallida" }), { status: 403 });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: body.email,
+    password: body.password,
+  });
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 401 });
   }
 
-  const res = new Response(JSON.stringify({ session: data.session, user: data.user }), { status: 200 });
+  const res = new Response(JSON.stringify({ user: data.user }), { status: 200 });
   if (data.session) {
     res.headers.set("Set-Cookie", [
       `sb-access-token=${data.session.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`,
