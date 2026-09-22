@@ -67,14 +67,18 @@ function TabButton({ active, onClick, icon, label }: { active: boolean; onClick:
 function ModulesTab() {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api<{ modules: Module[] }>("GET", "/api/modules");
       setModules(data.modules || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      setError((e as Error).message);
+    }
     setLoading(false);
   }, []);
 
@@ -92,6 +96,13 @@ function ModulesTab() {
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando módulos…</p>;
+  if (error) return (
+    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+      <p className="font-semibold">Error al cargar módulos</p>
+      <p className="mt-1">{error}</p>
+      <Button onClick={() => load()} variant="outline" className="mt-3">Reintentar</Button>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-3">
@@ -126,15 +137,19 @@ function ModulesTab() {
 function LogsTab() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api<{ logs: Log[] }>("GET", `/api/system-logs?level=${filter}&limit=200`);
       setLogs(data.logs || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      setError((e as Error).message);
+    }
     setLoading(false);
   }, [filter]);
 
@@ -191,6 +206,12 @@ function LogsTab() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando logs…</p>
+      ) : error ? (
+        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+          <p className="font-semibold">Error al cargar logs</p>
+          <p className="mt-1">{error}</p>
+          <Button onClick={() => load()} variant="outline" className="mt-3">Reintentar</Button>
+        </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">No hay logs para mostrar.</p>
       ) : (
@@ -228,13 +249,17 @@ function LogsTab() {
 function UsersTab() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api<{ profiles: Profile[] }>("GET", "/api/profiles");
       setProfiles(data.profiles || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      setError((e as Error).message);
+    }
     setLoading(false);
   }, []);
 
@@ -263,6 +288,13 @@ function UsersTab() {
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando usuarios…</p>;
+  if (error) return (
+    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+      <p className="font-semibold">Error al cargar usuarios</p>
+      <p className="mt-1">{error}</p>
+      <Button onClick={() => load()} variant="outline" className="mt-3">Reintentar</Button>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-3">
