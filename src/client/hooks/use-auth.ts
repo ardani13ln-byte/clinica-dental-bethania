@@ -12,13 +12,10 @@ export function useAuth() {
   const lockUntil = useRef(0);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json() as Promise<{ user: User | null }>)
-      .then((data) => {
-        setUser(data.user ?? null);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -31,7 +28,7 @@ export function useAuth() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json() as { error?: string; user?: User };
+    const data = await res.json() as { error?: string; user?: User; accessToken?: string; refreshToken?: string };
     if (!res.ok) {
       attempts.current++;
       if (attempts.current >= MAX_ATTEMPTS) {
@@ -41,11 +38,18 @@ export function useAuth() {
       throw new Error(data.error || "Error de autenticación");
     }
     attempts.current = 0;
+    if (data.accessToken && data.refreshToken) {
+      await supabase.auth.setSession({
+        access_token: data.accessToken,
+        refresh_token: data.refreshToken,
+      });
+    }
     if (data.user) setUser(data.user);
   }, []);
 
   const signOut = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
+    await supabase.auth.signOut();
     setUser(null);
   }, []);
 

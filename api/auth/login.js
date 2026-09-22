@@ -41,5 +41,9 @@ export default async function handler(req, res) {
     `sb-access-token=${data.session.access_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`,
     `sb-refresh-token=${data.session.refresh_token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`,
   ]);
-  res.status(200).json({ user: data.user });
+  res.status(200).json({
+    user: data.user,
+    accessToken: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+  });
 }
