@@ -24,18 +24,24 @@ function formatDate(startTime: string): string {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST" && req.method !== "GET") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
 
-  const authHeader = req.headers["authorization"];
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+    const authHeader = req.headers["authorization"];
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      res.status(500).json({ error: "Missing env vars", has_url: !!SUPABASE_URL, has_key: !!SERVICE_KEY });
+      return;
+    }
+
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
   const now = new Date();
   const tomorrow = new Date(now);
@@ -109,10 +115,13 @@ export default async function handler(req, res) {
     });
   }
 
-  res.status(200).json({
-    sent_at: now.toISOString(),
-    target_date: tomorrow.toISOString().slice(0, 10),
-    reminders_count: reminders.length,
-    reminders,
-  });
+    res.status(200).json({
+      sent_at: now.toISOString(),
+      target_date: tomorrow.toISOString().slice(0, 10),
+      reminders_count: reminders.length,
+      reminders,
+    });
+  } catch (err) {
+    res.status(500).json({ error: String(err), stack: err?.stack?.split("\n").slice(0, 5) });
+  }
 }
