@@ -4,9 +4,10 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/docs", "destination": "/docs.html" },
     { "source": "/legal/(.*)", "destination": "/index.html" },
     { "source": "/patients/(.*)", "destination": "/index.html" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|docs|openapi).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

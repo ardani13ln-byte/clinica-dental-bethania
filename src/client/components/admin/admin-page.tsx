@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
   Shield, Power, ScrollText, Users, Trash2, AlertTriangle,
-  Info, XCircle, CheckCircle, Search, UserPlus, ChevronDown, ChevronRight,
+  Info, XCircle, CheckCircle, Search, UserPlus, ChevronDown, ChevronRight, FileText,
 } from "lucide-react";
 
 type Module = { key: string; name: string; icon: string; enabled: boolean; sort_order: number };
@@ -19,6 +19,9 @@ export function AdminPage() {
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold">Administración del Sistema</h1>
+          <a href="/docs" target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted">
+            <FileText className="h-4 w-4" /> API Docs
+          </a>
         </div>
         <div className="mt-3 flex gap-1">
           <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />} label="Usuarios" />
