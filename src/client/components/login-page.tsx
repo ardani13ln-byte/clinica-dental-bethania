@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: string) => Promise<void> }) {
+export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: string, turnstileToken?: string) => Promise<void> }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ export function LoginPage({ onSignIn }: { onSignIn: (email: string, password: st
     }
     setLoading(true);
     try {
-      await onSignIn(email, password);
+      await onSignIn(email, password, turnstileToken ?? undefined);
     } catch (err) {
       setError((err as Error).message);
       if (widgetId.current && window.turnstile) {

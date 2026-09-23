@@ -18,17 +18,27 @@ export function useAuth() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string, turnstileToken?: string) => {
     if (Date.now() < lockUntil.current) {
       const secs = Math.ceil((lockUntil.current - Date.now()) / 1000);
       throw new Error(`Demasiados intentos. Espera ${secs}s.`);
     }
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json() as { error?: string; user?: User; accessToken?: string; refreshToken?: string };
+    let res: Response;
+    try {
+      res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, turnstileToken }),
+      });
+    } catch {
+      throw new Error("No se pudo conectar al servidor. Verifica tu conexión e inténtalo de nuevo.");
+    }
+    let data: { error?: string; user?: User; accessToken?: string; refreshToken?: string };
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Respuesta inválida del servidor.");
+    }
     if (!res.ok) {
       attempts.current++;
       if (attempts.current >= MAX_ATTEMPTS) {
