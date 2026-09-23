@@ -1,24 +1,33 @@
 import { useEffect, useState } from "react";
 import {
-  CalendarDays, CalendarRange, TrendingUp, Wallet, AlertTriangle, FlaskConical, Users, ListChecks,
+  CalendarDays, CalendarRange, TrendingUp, Wallet, AlertTriangle, FlaskConical, Users, ListChecks, Clock,
 } from "lucide-react";
 import { api } from "@/api";
 import { useApp } from "@/context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { ReportsSummary } from "@/types";
+import type { ReportsSummary, Appointment } from "@/types";
 
-export function ReportsPage() {
+export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
   const app = useApp();
   const [data, setData] = useState<ReportsSummary | null>(null);
+  const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const res = await api<ReportsSummary>("GET", "/api/reports/summary");
+        const today = new Date().toISOString().slice(0, 10);
+        const [res, apptRes] = await Promise.all([
+          api<ReportsSummary>("GET", "/api/reports/summary"),
+          api<{ appointments: Appointment[] }>("GET", `/api/appointments?date=${today}`),
+        ]);
         setData(res);
+        setTodayAppts((apptRes.appointments || []).filter(
+          (a) => a.kind === "patient" && a.status !== "cancelled",
+        ).sort((a, b) => a.start_time.localeCompare(b.start_time)));
       } catch (err) {
         app.setError((err as Error).message);
       } finally {
@@ -48,8 +57,8 @@ export function ReportsPage() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
-        <h1 className="text-lg font-semibold tracking-tight">Reportes</h1>
-        <p className="text-xs text-muted-foreground">KPIs de la clínica · mes a la fecha</p>
+        <h1 className="text-lg font-semibold tracking-tight">Dashboard</h1>
+        <p className="text-xs text-muted-foreground">Resumen operativo · mes a la fecha</p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-auto p-4">
@@ -61,8 +70,57 @@ export function ReportsPage() {
           <KpiCard icon={Wallet}        label="Cobros del mes"       value={`Q${data.month_collections.toFixed(0)}`} sub={`${collectionRate}% de la producción`} tone="amber" />
         </div>
 
+        {/* Today's schedule + alerts */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Clock className="h-4 w-4" />
+                Citas de hoy
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayAppts.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No hay citas programadas para hoy</p>
+              ) : (
+                <div className="space-y-2">
+                  {todayAppts.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => navigate("/agenda")}
+                      className="flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors hover:bg-accent/50"
+                    >
+                      <span className="w-16 shrink-0 text-sm font-medium tabular-nums">
+                        {new Date(a.start_time).toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      </span>
+                      <span className="flex-1 truncate text-sm font-medium">
+                        {[a.patient_first_name, a.patient_last_name].filter(Boolean).join(" ") || a.title || "—"}
+                      </span>
+                      <span className="hidden text-xs text-muted-foreground sm:inline">
+                        {a.treatment_name ?? ""}
+                      </span>
+                      <Badge className="shrink-0">{a.status}</Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Requiere atención</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <Alert icon={ListChecks} label="En lista de espera" value={data.waiting_list_count} tone={data.waiting_list_count > 0 ? "sky" : "slate"} />
+              <Alert icon={FlaskConical} label="Lab vencidos" value={data.overdue_lab_cases} tone={data.overdue_lab_cases > 0 ? "rose" : "slate"} />
+              <Alert icon={AlertTriangle} label="Inasistencias (mes)" value={data.month_no_shows} tone={data.month_no_shows > 0 ? "amber" : "slate"} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Monthly results + Aged receivables */}
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* Completion vs no-show */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Resultados de citas (mes)</CardTitle>
@@ -74,32 +132,19 @@ export function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Operational alerts */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Requiere atención</CardTitle>
+              <CardTitle className="text-base">Cuentas por cobrar</CardTitle>
+              <p className="text-xs text-muted-foreground">Saldos pendientes por días</p>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <Alert icon={ListChecks} label="Pacientes en lista de espera" value={data.waiting_list_count} tone={data.waiting_list_count > 0 ? "sky" : "slate"} />
-              <Alert icon={FlaskConical} label="Casos de laboratorio vencidos" value={data.overdue_lab_cases} tone={data.overdue_lab_cases > 0 ? "rose" : "slate"} />
-              <Alert icon={AlertTriangle} label="Inasistencias este mes" value={data.month_no_shows} tone={data.month_no_shows > 0 ? "amber" : "slate"} />
+            <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <ARBucket label="0–30 días"  amount={data.aged_receivables["0-30"]}  tone="emerald" />
+              <ARBucket label="31–60 días" amount={data.aged_receivables["31-60"]} tone="amber" />
+              <ARBucket label="61–90 días" amount={data.aged_receivables["61-90"]} tone="orange" />
+              <ARBucket label="90+ días"   amount={data.aged_receivables["90+"]}   tone="rose" />
             </CardContent>
           </Card>
         </div>
-
-        {/* Aged receivables */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Cuentas por cobrar</CardTitle>
-            <p className="text-xs text-muted-foreground">Saldos pendientes por días desde emisión</p>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <ARBucket label="0–30 días"  amount={data.aged_receivables["0-30"]}  tone="emerald" />
-            <ARBucket label="31–60 días" amount={data.aged_receivables["31-60"]} tone="amber" />
-            <ARBucket label="61–90 días" amount={data.aged_receivables["61-90"]} tone="orange" />
-            <ARBucket label="90+ días"   amount={data.aged_receivables["90+"]}   tone="rose" />
-          </CardContent>
-        </Card>
 
         <div className="grid gap-4 lg:grid-cols-2">
           {/* By treatment */}

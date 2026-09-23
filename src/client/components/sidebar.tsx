@@ -33,7 +33,6 @@ const allItems: Record<string, NavItem> = {
   agenda:     { label: "Agenda",              icon: Calendar,       path: "/agenda",   match: (r) => r.name === "agenda" },
   patients:   { label: "Pacientes",           icon: Users,          path: "/patients", match: (r) => r.name === "patients" || r.name === "patient" },
   lab:        { label: "Casos de laboratorio",icon: FlaskConical,   path: "/lab",      match: (r) => r.name === "lab" },
-  reports:    { label: "Reportes",            icon: FileBarChart2,  path: "/reports",  match: (r) => r.name === "reports" },
   settings:   { label: "Configuración",       icon: Settings,       path: "/settings", match: (r) => r.name === "settings" },
   admin:      { label: "Administración",      icon: Shield,         path: "/admin",    match: (r) => r.name === "admin" },
 };
@@ -63,7 +62,7 @@ export function Sidebar({
   }, []);
 
   const clinicKeys = ["dashboard", "agenda", "patients", "lab"];
-  const adminKeys = ["reports", "settings", "admin"];
+  const adminKeys = ["settings", "admin"];
 
   const renderItem = (key: string) => {
     const item = allItems[key];
