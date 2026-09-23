@@ -1,410 +1,3738 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
     "title": "Clínica Dental Bethania — API",
-    "description": "Sistema de gestión dental: agenda, pacientes, tratamientos, laboratorio, facturación, reportes, módulos y logs.\n\n**Autenticación:** POST /api/auth/login → cookies HttpOnly + setSession en cliente.\n\n**Base URL:** https://clinica-dental-bethania.vercel.app",
+    "description": "Generada automáticamente desde schemas de Zod.\n\n**Base URL:** https://clinica-dental-bethania.vercel.app",
     "version": "1.0.0",
-    "contact": { "email": "admin@clinicabethania.com" }
-  },
-  "servers": [
-    { "url": "https://clinica-dental-bethania.vercel.app", "description": "Producción" },
-    { "url": "http://localhost:5173", "description": "Desarrollo" }
-  ],
-  "components": {
-    "securitySchemes": {
-      "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "sb-access-token" }
-    },
-    "schemas": {
-      "Patient": {
-        "type": "object",
-        "required": ["first_name", "last_name"],
-        "properties": {
-          "id": { "type": "integer" },
-          "first_name": { "type": "string", "maxLength": 100 },
-          "last_name": { "type": "string", "maxLength": 100 },
-          "date_of_birth": { "type": "string", "nullable": true },
-          "email": { "type": "string", "nullable": true },
-          "phone": { "type": "string", "nullable": true },
-          "address": { "type": "string", "nullable": true },
-          "medical_alerts": { "type": "string", "nullable": true },
-          "notes": { "type": "string", "nullable": true },
-          "referral_source": { "type": "string", "nullable": true }
-        }
-      },
-      "Appointment": {
-        "type": "object",
-        "required": ["operatory_id", "start_time", "end_time"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer", "nullable": true },
-          "practitioner_id": { "type": "integer", "nullable": true },
-          "operatory_id": { "type": "integer" },
-          "treatment_type_id": { "type": "integer", "nullable": true },
-          "start_time": { "type": "string", "example": "2026-09-23T09:00:00" },
-          "end_time": { "type": "string", "example": "2026-09-23T09:30:00" },
-          "status": { "type": "string", "enum": ["scheduled", "confirmed", "completed", "cancelled", "no_show", "in_chair"], "default": "scheduled" },
-          "kind": { "type": "string", "enum": ["patient", "block"], "default": "patient" },
-          "title": { "type": "string", "nullable": true },
-          "notes": { "type": "string", "nullable": true }
-        }
-      },
-      "Practitioner": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" },
-          "role": { "type": "string", "enum": ["dentist", "hygienist", "assistant", "receptionist"], "default": "dentist" },
-          "color": { "type": "string", "default": "teal" },
-          "email": { "type": "string", "nullable": true },
-          "phone": { "type": "string", "nullable": true }
-        }
-      },
-      "TreatmentType": {
-        "type": "object",
-        "required": ["code", "name"],
-        "properties": {
-          "id": { "type": "integer" },
-          "code": { "type": "string", "maxLength": 20 },
-          "name": { "type": "string" },
-          "duration_minutes": { "type": "integer", "minimum": 1, "maximum": 600, "default": 30 },
-          "default_fee": { "type": "number", "minimum": 0, "default": 0 },
-          "color": { "type": "string", "default": "sky" }
-        }
-      },
-      "Operatory": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" },
-          "color": { "type": "string" },
-          "sort_order": { "type": "integer" }
-        }
-      },
-      "Invoice": {
-        "type": "object",
-        "required": ["patient_id"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer" },
-          "appointment_id": { "type": "integer", "nullable": true },
-          "status": { "type": "string", "enum": ["open", "paid", "void", "partial"], "default": "open" },
-          "total": { "type": "number", "minimum": 0, "default": 0 },
-          "amount_paid": { "type": "number", "minimum": 0, "default": 0 },
-          "notes": { "type": "string", "nullable": true }
-        }
-      },
-      "LabCase": {
-        "type": "object",
-        "required": ["patient_id", "lab_name", "case_type"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer" },
-          "practitioner_id": { "type": "integer", "nullable": true },
-          "treatment_type_id": { "type": "integer", "nullable": true },
-          "lab_name": { "type": "string" },
-          "case_type": { "type": "string" },
-          "tooth": { "type": "string", "nullable": true },
-          "shade": { "type": "string", "nullable": true },
-          "fee": { "type": "number", "minimum": 0, "default": 0 },
-          "status": { "type": "string", "enum": ["sent", "received", "seated", "cancelled"], "default": "sent" },
-          "due_at": { "type": "string", "nullable": true },
-          "notes": { "type": "string", "nullable": true }
-        }
-      },
-      "ClinicalNote": {
-        "type": "object",
-        "required": ["patient_id", "body"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer" },
-          "practitioner_id": { "type": "integer", "nullable": true },
-          "note_date": { "type": "string" },
-          "body": { "type": "string" }
-        }
-      },
-      "PlanItem": {
-        "type": "object",
-        "required": ["patient_id"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer" },
-          "treatment_type_id": { "type": "integer", "nullable": true },
-          "tooth": { "type": "string", "nullable": true },
-          "surface": { "type": "string", "nullable": true },
-          "fee": { "type": "number", "minimum": 0, "default": 0 },
-          "status": { "type": "string", "enum": ["planned", "approved", "completed", "cancelled"], "default": "planned" },
-          "notes": { "type": "string", "nullable": true }
-        }
-      },
-      "InsurancePlan": {
-        "type": "object",
-        "required": ["patient_id", "carrier"],
-        "properties": {
-          "id": { "type": "integer" },
-          "patient_id": { "type": "integer" },
-          "rank": { "type": "string", "enum": ["primary", "secondary", "tertiary"], "default": "primary" },
-          "carrier": { "type": "string" },
-          "member_id": { "type": "string", "nullable": true },
-          "copay": { "type": "number", "default": 0 },
-          "max_annual": { "type": "number", "default": 0 }
-        }
-      },
-      "Module": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "key": { "type": "string" },
-          "name": { "type": "string" },
-          "description": { "type": "string" },
-          "enabled": { "type": "boolean" }
-        }
-      },
-      "Profile": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "email": { "type": "string" },
-          "role": { "type": "string", "enum": ["superadmin", "admin", "dentist", "hygienist", "assistant", "receptionist", "user"] },
-          "full_name": { "type": "string", "nullable": true },
-          "active": { "type": "boolean" }
-        }
-      },
-      "SystemLog": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "level": { "type": "string", "enum": ["info", "warning", "error", "critical"] },
-          "category": { "type": "string" },
-          "message": { "type": "string" },
-          "user_email": { "type": "string", "nullable": true }
-        }
-      },
-      "LoginRequest": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "format": "email" },
-          "password": { "type": "string" },
-          "turnstileToken": { "type": "string", "description": "Token de Cloudflare Turnstile (antibot)" }
-        }
-      },
-      "CreateUserRequest": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "format": "email" },
-          "password": { "type": "string" },
-          "full_name": { "type": "string" },
-          "role": { "type": "string", "enum": ["admin", "dentist", "hygienist", "assistant", "receptionist", "user"] }
-        }
-      }
+    "contact": {
+      "email": "admin@clinicabethania.com"
     }
   },
+  "servers": [
+    {
+      "url": "https://clinica-dental-bethania.vercel.app",
+      "description": "Producción"
+    },
+    {
+      "url": "http://localhost:5173",
+      "description": "Desarrollo"
+    }
+  ],
   "tags": [
-    { "name": "Auth", "description": "Autenticación y sesión" },
-    { "name": "Pacientes", "description": "Expedientes clínicos" },
-    { "name": "Citas", "description": "Agenda y programación" },
-    { "name": "Practicantes", "description": "Dentistas y personal" },
-    { "name": "Tipos de tratamiento", "description": "Catálogo de tratamientos" },
-    { "name": "Consultorios", "description": "Sillas operativas" },
-    { "name": "Plan de tratamiento", "description": "Ítems del plan por paciente" },
-    { "name": "Notas clínicas", "description": "Notas del expediente" },
-    { "name": "Condiciones dentales", "description": "Carta dental" },
-    { "name": "Facturación", "description": "Facturas e insurance" },
-    { "name": "Laboratorio", "description": "Casos de laboratorio" },
-    { "name": "Lista de espera", "description": "Pacientes en espera" },
-    { "name": "Citas por hacer", "description": "Recordatorios de citas" },
-    { "name": "Reportes", "description": "Estadísticas del sistema" },
-    { "name": "Configuración", "description": "Settings del sistema" },
-    { "name": "Administración", "description": "Módulos, usuarios y logs (superadmin)" }
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Pacientes"
+    },
+    {
+      "name": "Citas"
+    },
+    {
+      "name": "Practicantes"
+    },
+    {
+      "name": "Tratamientos"
+    },
+    {
+      "name": "Consultorios"
+    },
+    {
+      "name": "Plan"
+    },
+    {
+      "name": "Notas"
+    },
+    {
+      "name": "Carta dental"
+    },
+    {
+      "name": "Facturación"
+    },
+    {
+      "name": "Laboratorio"
+    },
+    {
+      "name": "Lista de espera"
+    },
+    {
+      "name": "Citas por hacer"
+    },
+    {
+      "name": "Reportes"
+    },
+    {
+      "name": "Configuración"
+    },
+    {
+      "name": "Admin"
+    }
   ],
   "paths": {
     "/api/auth/login": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Iniciar sesión",
-        "description": "Autentica al usuario, setea cookies HttpOnly y devuelve el access_token para setSession en el cliente.",
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "description": "Autentica, setea cookies HttpOnly, devuelve access_token.",
         "responses": {
-          "200": { "description": "Login exitoso", "content": { "application/json": { "schema": { "type": "object", "properties": { "user": { "$ref": "#/components/schemas/Profile" }, "accessToken": { "type": "string" }, "refreshToken": { "type": "string" } } } } } },
-          "401": { "description": "Credenciales inválidas" },
-          "403": { "description": "Verificación antibot fallida" }
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "$ref": "#/properties/email"
+                  },
+                  "turnstileToken": {
+                    "$ref": "#/properties/email"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
         }
       }
     },
     "/api/auth/logout": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Cerrar sesión",
-        "description": "Elimina las cookies de sesión.",
-        "responses": { "200": { "description": "Sesión cerrada" } }
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
       }
     },
     "/api/auth/me": {
       "get": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Usuario actual",
-        "description": "Devuelve el usuario autenticado desde las cookies HttpOnly.",
-        "responses": { "200": { "description": "Usuario actual", "content": { "application/json": { "schema": { "type": "object", "properties": { "user": { "$ref": "#/components/schemas/Profile" } } } } } } }
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
       }
     },
     "/api/auth/create-user": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Crear usuario (superadmin)",
-        "description": "Crea un nuevo usuario en Supabase Auth, su profile y le asigna todos los módulos habilitados. Solo superadmin.",
-        "security": [{ "cookieAuth": [] }],
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateUserRequest" } } } },
-        "responses": { "200": { "description": "Usuario creado" }, "403": { "description": "No autorizado" } }
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "full_name": {
+                    "$ref": "#/properties/email"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "dentist",
+                      "hygienist",
+                      "assistant",
+                      "receptionist",
+                      "user"
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/api/patients": {
       "get": {
-        "tags": ["Pacientes"],
+        "tags": [
+          "Pacientes"
+        ],
         "summary": "Listar pacientes",
-        "parameters": [{ "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Buscar por nombre, email o teléfono" }],
-        "responses": { "200": { "description": "Lista de pacientes" } }
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Buscar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       },
       "post": {
-        "tags": ["Pacientes"],
+        "tags": [
+          "Pacientes"
+        ],
         "summary": "Crear paciente",
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Patient" } } } },
-        "responses": { "200": { "description": "Paciente creado" } }
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "date_of_birth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "email": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "phone": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "address": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "medical_alerts": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "notes": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "referral_source": {
+                    "$ref": "#/properties/date_of_birth"
+                  }
+                },
+                "required": [
+                  "first_name",
+                  "last_name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/api/patients/{id}": {
-      "get": { "tags": ["Pacientes"], "summary": "Obtener paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Paciente" } } },
-      "put": { "tags": ["Pacientes"], "summary": "Actualizar paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Patient" } } } }, "responses": { "200": { "description": "Paciente actualizado" } } },
-      "delete": { "tags": ["Pacientes"], "summary": "Eliminar paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "get": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Obtener paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Actualizar paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "date_of_birth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "email": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "phone": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "address": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "medical_alerts": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "notes": {
+                    "$ref": "#/properties/date_of_birth"
+                  },
+                  "referral_source": {
+                    "$ref": "#/properties/date_of_birth"
+                  }
+                },
+                "required": [
+                  "first_name",
+                  "last_name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Pacientes"
+        ],
+        "summary": "Eliminar paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
-    "/api/patients/{id}/treatment-plan": { "get": { "tags": ["Plan de tratamiento"], "summary": "Plan de tratamiento del paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Ítems del plan" } } } },
-    "/api/patients/{id}/notes": { "get": { "tags": ["Notas clínicas"], "summary": "Notas clínicas del paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Notas" } } } },
-    "/api/patients/{id}/tooth-chart": { "get": { "tags": ["Condiciones dentales"], "summary": "Carta dental del paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Condiciones" } } } },
-    "/api/patients/{id}/invoices": { "get": { "tags": ["Facturación"], "summary": "Facturas del paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Facturas" } } } },
-    "/api/patients/{id}/insurance": { "get": { "tags": ["Facturación"], "summary": "Seguros del paciente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Planes de seguro" } } } },
+    "/api/patients/{id}/treatment-plan": {
+      "get": {
+        "tags": [
+          "Plan"
+        ],
+        "summary": "Plan del paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/patients/{id}/notes": {
+      "get": {
+        "tags": [
+          "Notas"
+        ],
+        "summary": "Notas del paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/patients/{id}/tooth-chart": {
+      "get": {
+        "tags": [
+          "Carta dental"
+        ],
+        "summary": "Carta dental",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/patients/{id}/invoices": {
+      "get": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Facturas del paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/patients/{id}/insurance": {
+      "get": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Seguros del paciente",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
     "/api/appointments": {
-      "get": { "tags": ["Citas"], "summary": "Listar citas", "parameters": [{ "name": "date", "in": "query", "schema": { "type": "string" } }, { "name": "patient_id", "in": "query", "schema": { "type": "integer" } }], "responses": { "200": { "description": "Citas" } } },
-      "post": { "tags": ["Citas"], "summary": "Crear cita", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Appointment" } } } }, "responses": { "200": { "description": "Cita creada" } } }
+      "get": {
+        "tags": [
+          "Citas"
+        ],
+        "summary": "Listar citas",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Fecha",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "patient_id",
+            "in": "query",
+            "description": "ID paciente",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Citas"
+        ],
+        "summary": "Crear cita",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "practitioner_id": {
+                    "$ref": "#/properties/patient_id"
+                  },
+                  "operatory_id": {
+                    "type": "number"
+                  },
+                  "treatment_type_id": {
+                    "$ref": "#/properties/patient_id"
+                  },
+                  "start_time": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "confirmed",
+                      "completed",
+                      "cancelled",
+                      "no_show",
+                      "in_chair"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "patient",
+                      "block"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "$ref": "#/properties/title"
+                  }
+                },
+                "required": [
+                  "operatory_id",
+                  "start_time",
+                  "end_time"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/appointments/{id}": {
-      "put": { "tags": ["Citas"], "summary": "Actualizar cita", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Appointment" } } } }, "responses": { "200": { "description": "Cita actualizada" } } },
-      "delete": { "tags": ["Citas"], "summary": "Eliminar cita", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminada" } } }
+      "put": {
+        "tags": [
+          "Citas"
+        ],
+        "summary": "Actualizar cita",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "practitioner_id": {
+                    "$ref": "#/properties/patient_id"
+                  },
+                  "operatory_id": {
+                    "type": "number"
+                  },
+                  "treatment_type_id": {
+                    "$ref": "#/properties/patient_id"
+                  },
+                  "start_time": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "confirmed",
+                      "completed",
+                      "cancelled",
+                      "no_show",
+                      "in_chair"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "patient",
+                      "block"
+                    ]
+                  },
+                  "title": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "$ref": "#/properties/title"
+                  }
+                },
+                "required": [
+                  "operatory_id",
+                  "start_time",
+                  "end_time"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Citas"
+        ],
+        "summary": "Eliminar cita",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/practitioners": {
-      "get": { "tags": ["Practicantes"], "summary": "Listar practicantes", "responses": { "200": { "description": "Practicantes" } } },
-      "post": { "tags": ["Practicantes"], "summary": "Crear practicante", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Practitioner" } } } }, "responses": { "200": { "description": "Practicante creado" } } }
+      "get": {
+        "tags": [
+          "Practicantes"
+        ],
+        "summary": "Listar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Practicantes"
+        ],
+        "summary": "Crear",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "dentist",
+                      "hygienist",
+                      "assistant",
+                      "receptionist"
+                    ]
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "phone": {
+                    "$ref": "#/properties/email"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/practitioners/{id}": {
-      "put": { "tags": ["Practicantes"], "summary": "Actualizar practicante", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Practicantes"], "summary": "Eliminar practicante", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Practicantes"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "dentist",
+                      "hygienist",
+                      "assistant",
+                      "receptionist"
+                    ]
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "phone": {
+                    "$ref": "#/properties/email"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Practicantes"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/treatment-types": {
-      "get": { "tags": ["Tipos de tratamiento"], "summary": "Listar tipos", "responses": { "200": { "description": "Tipos" } } },
-      "post": { "tags": ["Tipos de tratamiento"], "summary": "Crear tipo", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreatmentType" } } } }, "responses": { "200": { "description": "Tipo creado" } } }
+      "get": {
+        "tags": [
+          "Tratamientos"
+        ],
+        "summary": "Listar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tratamientos"
+        ],
+        "summary": "Crear",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 600
+                  },
+                  "default_fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/treatment-types/{id}": {
-      "put": { "tags": ["Tipos de tratamiento"], "summary": "Actualizar tipo", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Tipos de tratamiento"], "summary": "Eliminar tipo", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Tratamientos"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 600
+                  },
+                  "default_fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Tratamientos"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/operatories": {
-      "get": { "tags": ["Consultorios"], "summary": "Listar consultorios", "responses": { "200": { "description": "Consultorios" } } },
-      "post": { "tags": ["Consultorios"], "summary": "Crear consultorio", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Operatory" } } } }, "responses": { "200": { "description": "Consultorio creado" } } }
+      "get": {
+        "tags": [
+          "Consultorios"
+        ],
+        "summary": "Listar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Consultorios"
+        ],
+        "summary": "Crear",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "sort_order": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/operatories/{id}": {
-      "put": { "tags": ["Consultorios"], "summary": "Actualizar", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Consultorios"], "summary": "Eliminar", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Consultorios"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "sort_order": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Consultorios"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/treatment-plan-items": {
-      "post": { "tags": ["Plan de tratamiento"], "summary": "Crear ítem del plan", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlanItem" } } } }, "responses": { "200": { "description": "Ítem creado" } } }
+      "post": {
+        "tags": [
+          "Plan"
+        ],
+        "summary": "Crear ítem",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "treatment_type_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "tooth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "surface": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "planned",
+                      "approved",
+                      "completed",
+                      "cancelled"
+                    ]
+                  },
+                  "notes": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "sort_order": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/treatment-plan-items/{id}": {
-      "put": { "tags": ["Plan de tratamiento"], "summary": "Actualizar ítem", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Plan de tratamiento"], "summary": "Eliminar ítem", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Plan"
+        ],
+        "summary": "Actualizar ítem",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "treatment_type_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "tooth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "surface": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "planned",
+                      "approved",
+                      "completed",
+                      "cancelled"
+                    ]
+                  },
+                  "notes": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "sort_order": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Plan"
+        ],
+        "summary": "Eliminar ítem",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/clinical-notes": {
-      "post": { "tags": ["Notas clínicas"], "summary": "Crear nota", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClinicalNote" } } } }, "responses": { "200": { "description": "Nota creada" } } }
+      "post": {
+        "tags": [
+          "Notas"
+        ],
+        "summary": "Crear nota",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "practitioner_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "note_date": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "body"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/clinical-notes/{id}": {
-      "delete": { "tags": ["Notas clínicas"], "summary": "Eliminar nota", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminada" } } }
+      "delete": {
+        "tags": [
+          "Notas"
+        ],
+        "summary": "Eliminar nota",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/tooth-conditions": {
-      "post": { "tags": ["Condiciones dentales"], "summary": "Crear condición dental", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["patient_id", "tooth", "condition"], "properties": { "patient_id": { "type": "integer" }, "tooth": { "type": "string" }, "surface": { "type": "string", "nullable": true }, "condition": { "type": "string" } } } } } }, "responses": { "200": { "description": "Condición creada" } } }
+      "post": {
+        "tags": [
+          "Carta dental"
+        ],
+        "summary": "Crear condición",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "tooth": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 5
+                  },
+                  "surface": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "condition": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "tooth",
+                  "condition"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/tooth-conditions/{id}": {
-      "delete": { "tags": ["Condiciones dentales"], "summary": "Eliminar condición", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminada" } } }
+      "delete": {
+        "tags": [
+          "Carta dental"
+        ],
+        "summary": "Eliminar condición",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/invoices": {
-      "post": { "tags": ["Facturación"], "summary": "Crear factura", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Invoice" } } } }, "responses": { "200": { "description": "Factura creada" } } }
+      "post": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Crear factura",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "appointment_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "paid",
+                      "void",
+                      "partial"
+                    ]
+                  },
+                  "total": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "amount_paid": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/invoices/{id}": {
-      "put": { "tags": ["Facturación"], "summary": "Actualizar factura", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizada" } } },
-      "delete": { "tags": ["Facturación"], "summary": "Eliminar factura", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminada" } } }
+      "put": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "appointment_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "paid",
+                      "void",
+                      "partial"
+                    ]
+                  },
+                  "total": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "amount_paid": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/insurance-plans": {
-      "post": { "tags": ["Facturación"], "summary": "Crear seguro", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InsurancePlan" } } } }, "responses": { "200": { "description": "Seguro creado" } } }
+      "post": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Crear seguro",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "rank": {
+                    "type": "string",
+                    "enum": [
+                      "primary",
+                      "secondary",
+                      "tertiary"
+                    ]
+                  },
+                  "carrier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "member_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "group_id": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "subscriber_name": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "subscriber_dob": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "effective_date": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "term_date": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "copay": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "deductible_total": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "deductible_used": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_annual": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_used": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "$ref": "#/properties/member_id"
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "carrier"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/insurance-plans/{id}": {
-      "put": { "tags": ["Facturación"], "summary": "Actualizar seguro", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Facturación"], "summary": "Eliminar seguro", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Actualizar seguro",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "rank": {
+                    "type": "string",
+                    "enum": [
+                      "primary",
+                      "secondary",
+                      "tertiary"
+                    ]
+                  },
+                  "carrier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "member_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "group_id": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "subscriber_name": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "subscriber_dob": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "effective_date": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "term_date": {
+                    "$ref": "#/properties/member_id"
+                  },
+                  "copay": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "deductible_total": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "deductible_used": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_annual": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_used": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "$ref": "#/properties/member_id"
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "carrier"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Facturación"
+        ],
+        "summary": "Eliminar seguro",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/lab-cases": {
-      "get": { "tags": ["Laboratorio"], "summary": "Listar casos", "parameters": [{ "name": "status", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "description": "Casos" } } },
-      "post": { "tags": ["Laboratorio"], "summary": "Crear caso", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LabCase" } } } }, "responses": { "200": { "description": "Caso creado" } } }
+      "get": {
+        "tags": [
+          "Laboratorio"
+        ],
+        "summary": "Listar casos",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Estado",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Laboratorio"
+        ],
+        "summary": "Crear caso",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "practitioner_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "treatment_type_id": {
+                    "$ref": "#/properties/practitioner_id"
+                  },
+                  "lab_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "case_type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "tooth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "shade": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "sent_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "due_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "received_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "seated_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "sent",
+                      "received",
+                      "seated",
+                      "cancelled"
+                    ]
+                  },
+                  "notes": {
+                    "$ref": "#/properties/tooth"
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "lab_name",
+                  "case_type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/lab-cases/{id}": {
-      "put": { "tags": ["Laboratorio"], "summary": "Actualizar caso", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Laboratorio"], "summary": "Eliminar caso", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Laboratorio"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "practitioner_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "treatment_type_id": {
+                    "$ref": "#/properties/practitioner_id"
+                  },
+                  "lab_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "case_type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "tooth": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "shade": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "fee": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "sent_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "due_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "received_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "seated_at": {
+                    "$ref": "#/properties/tooth"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "sent",
+                      "received",
+                      "seated",
+                      "cancelled"
+                    ]
+                  },
+                  "notes": {
+                    "$ref": "#/properties/tooth"
+                  }
+                },
+                "required": [
+                  "patient_id",
+                  "lab_name",
+                  "case_type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Laboratorio"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/waiting-list": {
-      "get": { "tags": ["Lista de espera"], "summary": "Listar espera", "responses": { "200": { "description": "Lista" } } },
-      "post": { "tags": ["Lista de espera"], "summary": "Agregar a espera", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["patient_id"], "properties": { "patient_id": { "type": "integer" }, "treatment_type_id": { "type": "integer" }, "duration_minutes": { "type": "integer", "default": 30 } } } } } }, "responses": { "200": { "description": "Agregado" } } }
+      "get": {
+        "tags": [
+          "Lista de espera"
+        ],
+        "summary": "Listar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Lista de espera"
+        ],
+        "summary": "Agregar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "treatment_type_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "preferred_practitioner_id": {
+                    "$ref": "#/properties/treatment_type_id"
+                  },
+                  "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 600
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/waiting-list/{id}": {
-      "delete": { "tags": ["Lista de espera"], "summary": "Eliminar de espera", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "delete": {
+        "tags": [
+          "Lista de espera"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/appointments-to-make": {
-      "get": { "tags": ["Citas por hacer"], "summary": "Listar citas por hacer", "parameters": [{ "name": "source", "in": "query", "schema": { "type": "string" } }], "responses": { "200": { "description": "Lista" } } },
-      "post": { "tags": ["Citas por hacer"], "summary": "Crear recordatorio", "responses": { "200": { "description": "Creado" } } }
+      "get": {
+        "tags": [
+          "Citas por hacer"
+        ],
+        "summary": "Listar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Origen",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Citas por hacer"
+        ],
+        "summary": "Crear",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "treatment_type_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "due_after": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "source": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "notes": {
+                    "$ref": "#/properties/due_after"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "done",
+                      "cancelled"
+                    ]
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     },
     "/api/appointments-to-make/{id}": {
-      "put": { "tags": ["Citas por hacer"], "summary": "Actualizar", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Actualizado" } } },
-      "delete": { "tags": ["Citas por hacer"], "summary": "Eliminar", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "put": {
+        "tags": [
+          "Citas por hacer"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patient_id": {
+                    "type": "integer"
+                  },
+                  "treatment_type_id": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "due_after": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "source": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "notes": {
+                    "$ref": "#/properties/due_after"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "done",
+                      "cancelled"
+                    ]
+                  }
+                },
+                "required": [
+                  "patient_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Citas por hacer"
+        ],
+        "summary": "Eliminar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/reports/summary": {
-      "get": { "tags": ["Reportes"], "summary": "Resumen de producción", "description": "Citas de hoy/semana/mes, completadas, no-shows, canceladas, producción, cobros, por tratamiento, por fuente, cuentas por cobrar, casos de lab vencidos, lista de espera.", "responses": { "200": { "description": "Resumen" } } }
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "summary": "Resumen de producción",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      }
     },
     "/api/settings": {
-      "get": { "tags": ["Configuración"], "summary": "Obtener configuración", "responses": { "200": { "description": "Settings" } } },
-      "put": { "tags": ["Configuración"], "summary": "Actualizar configuración", "responses": { "200": { "description": "Settings actualizados" } } }
+      "get": {
+        "tags": [
+          "Configuración"
+        ],
+        "summary": "Obtener",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Configuración"
+        ],
+        "summary": "Actualizar",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        }
+      }
     },
     "/api/modules": {
-      "get": { "tags": ["Administración"], "summary": "Listar módulos (catálogo)", "security": [{ "cookieAuth": [] }], "responses": { "200": { "description": "Módulos", "content": { "application/json": { "schema": { "type": "object", "properties": { "modules": { "type": "array", "items": { "$ref": "#/components/schemas/Module" } } } } } } } } }
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Listar módulos",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
     },
     "/api/modules/{id}": {
-      "put": { "tags": ["Administración"], "summary": "Actualizar módulo (superadmin)", "security": [{ "cookieAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Módulo actualizado" } } }
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Actualizar módulo",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/user-modules": {
-      "get": { "tags": ["Administración"], "summary": "Módulos del usuario actual", "security": [{ "cookieAuth": [] }], "responses": { "200": { "description": "Módulos habilitados para el usuario" } } },
-      "put": { "tags": ["Administración"], "summary": "Actualizar visibilidad de módulo por usuario (superadmin)", "security": [{ "cookieAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["user_id", "module_key", "enabled"], "properties": { "user_id": { "type": "string", "format": "uuid" }, "module_key": { "type": "string" }, "enabled": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Actualizado" } } }
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Módulos del usuario actual",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Actualizar visibilidad",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
     },
     "/api/user-modules/{userId}": {
-      "get": { "tags": ["Administración"], "summary": "Módulos de un usuario específico (superadmin)", "security": [{ "cookieAuth": [] }], "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }], "responses": { "200": { "description": "Módulos del usuario" } } }
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Módulos de un usuario",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "UUID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/profiles": {
-      "get": { "tags": ["Administración"], "summary": "Listar usuarios (superadmin)", "security": [{ "cookieAuth": [] }], "responses": { "200": { "description": "Perfiles", "content": { "application/json": { "schema": { "type": "object", "properties": { "profiles": { "type": "array", "items": { "$ref": "#/components/schemas/Profile" } } } } } } } } }
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Listar usuarios",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
     },
     "/api/profiles/{id}": {
-      "put": { "tags": ["Administración"], "summary": "Actualizar rol/estado de usuario (superadmin)", "security": [{ "cookieAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }], "responses": { "200": { "description": "Perfil actualizado" } } }
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Actualizar usuario",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     },
     "/api/system-logs": {
-      "get": { "tags": ["Administración"], "summary": "Listar logs (superadmin)", "security": [{ "cookieAuth": [] }], "parameters": [{ "name": "level", "in": "query", "schema": { "type": "string", "enum": ["info", "warning", "error", "critical"] } }, { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 200 } }], "responses": { "200": { "description": "Logs", "content": { "application/json": { "schema": { "type": "object", "properties": { "logs": { "type": "array", "items": { "$ref": "#/components/schemas/SystemLog" } } } } } } } } },
-      "post": { "tags": ["Administración"], "summary": "Crear log", "security": [{ "cookieAuth": [] }], "responses": { "200": { "description": "Log creado" } } }
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Listar logs",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "description": "Nivel",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Límite",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Crear log",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
     },
     "/api/system-logs/{id}": {
-      "delete": { "tags": ["Administración"], "summary": "Eliminar log (superadmin)", "security": [{ "cookieAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Eliminado" } } }
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Eliminar log",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "No autorizado"
+          },
+          "403": {
+            "description": "Prohibido"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Patient": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "last_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "date_of_birth": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "$ref": "#/properties/date_of_birth"
+          },
+          "phone": {
+            "$ref": "#/properties/date_of_birth"
+          },
+          "address": {
+            "$ref": "#/properties/date_of_birth"
+          },
+          "medical_alerts": {
+            "$ref": "#/properties/date_of_birth"
+          },
+          "notes": {
+            "$ref": "#/properties/date_of_birth"
+          },
+          "referral_source": {
+            "$ref": "#/properties/date_of_birth"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name"
+        ],
+        "additionalProperties": false
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "practitioner_id": {
+            "$ref": "#/properties/patient_id"
+          },
+          "operatory_id": {
+            "type": "number"
+          },
+          "treatment_type_id": {
+            "$ref": "#/properties/patient_id"
+          },
+          "start_time": {
+            "type": "string",
+            "minLength": 1
+          },
+          "end_time": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "confirmed",
+              "completed",
+              "cancelled",
+              "no_show",
+              "in_chair"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "patient",
+              "block"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "$ref": "#/properties/title"
+          }
+        },
+        "required": [
+          "operatory_id",
+          "start_time",
+          "end_time"
+        ],
+        "additionalProperties": false
+      },
+      "Practitioner": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "dentist",
+              "hygienist",
+              "assistant",
+              "receptionist"
+            ]
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "$ref": "#/properties/email"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "TreatmentType": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "default_fee": {
+            "type": "number",
+            "minimum": 0
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "Operatory": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "PlanItem": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "treatment_type_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "tooth": {
+            "type": "string",
+            "nullable": true
+          },
+          "surface": {
+            "$ref": "#/properties/tooth"
+          },
+          "fee": {
+            "type": "number",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "approved",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "notes": {
+            "$ref": "#/properties/tooth"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "additionalProperties": false
+      },
+      "ClinicalNote": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "practitioner_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "note_date": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "patient_id",
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "ToothCondition": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "tooth": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5
+          },
+          "surface": {
+            "type": "string",
+            "nullable": true
+          },
+          "condition": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "patient_id",
+          "tooth",
+          "condition"
+        ],
+        "additionalProperties": false
+      },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "appointment_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "paid",
+              "void",
+              "partial"
+            ]
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0
+          },
+          "amount_paid": {
+            "type": "number",
+            "minimum": 0
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "additionalProperties": false
+      },
+      "WaitingList": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "treatment_type_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "preferred_practitioner_id": {
+            "$ref": "#/properties/treatment_type_id"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "additionalProperties": false
+      },
+      "ToMake": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "treatment_type_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "due_after": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "notes": {
+            "$ref": "#/properties/due_after"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "done",
+              "cancelled"
+            ]
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "additionalProperties": false
+      },
+      "InsurancePlan": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "rank": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "tertiary"
+            ]
+          },
+          "carrier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "member_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "group_id": {
+            "$ref": "#/properties/member_id"
+          },
+          "subscriber_name": {
+            "$ref": "#/properties/member_id"
+          },
+          "subscriber_dob": {
+            "$ref": "#/properties/member_id"
+          },
+          "effective_date": {
+            "$ref": "#/properties/member_id"
+          },
+          "term_date": {
+            "$ref": "#/properties/member_id"
+          },
+          "copay": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deductible_total": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deductible_used": {
+            "type": "number",
+            "minimum": 0
+          },
+          "max_annual": {
+            "type": "number",
+            "minimum": 0
+          },
+          "max_used": {
+            "type": "number",
+            "minimum": 0
+          },
+          "notes": {
+            "$ref": "#/properties/member_id"
+          }
+        },
+        "required": [
+          "patient_id",
+          "carrier"
+        ],
+        "additionalProperties": false
+      },
+      "LabCase": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "integer"
+          },
+          "practitioner_id": {
+            "type": "number",
+            "nullable": true
+          },
+          "treatment_type_id": {
+            "$ref": "#/properties/practitioner_id"
+          },
+          "lab_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "case_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "tooth": {
+            "type": "string",
+            "nullable": true
+          },
+          "shade": {
+            "$ref": "#/properties/tooth"
+          },
+          "fee": {
+            "type": "number",
+            "minimum": 0
+          },
+          "sent_at": {
+            "$ref": "#/properties/tooth"
+          },
+          "due_at": {
+            "$ref": "#/properties/tooth"
+          },
+          "received_at": {
+            "$ref": "#/properties/tooth"
+          },
+          "seated_at": {
+            "$ref": "#/properties/tooth"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "sent",
+              "received",
+              "seated",
+              "cancelled"
+            ]
+          },
+          "notes": {
+            "$ref": "#/properties/tooth"
+          }
+        },
+        "required": [
+          "patient_id",
+          "lab_name",
+          "case_type"
+        ],
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "$ref": "#/properties/email"
+          },
+          "turnstileToken": {
+            "$ref": "#/properties/email"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "full_name": {
+            "$ref": "#/properties/email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "dentist",
+              "hygienist",
+              "assistant",
+              "receptionist",
+              "user"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "Module": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/properties/key"
+          },
+          "description": {
+            "allOf": [
+              {
+                "$ref": "#/properties/key"
+              }
+            ],
+            "nullable": true
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/properties/key"
+              }
+            ],
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "description",
+          "icon",
+          "enabled",
+          "sort_order"
+        ],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "superadmin",
+              "admin",
+              "dentist",
+              "hygienist",
+              "assistant",
+              "receptionist",
+              "user"
+            ]
+          },
+          "full_name": {
+            "allOf": [
+              {
+                "$ref": "#/properties/email"
+              }
+            ],
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "full_name",
+          "active"
+        ],
+        "additionalProperties": false
+      },
+      "SystemLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "error",
+              "critical"
+            ]
+          },
+          "category": {
+            "$ref": "#/properties/created_at"
+          },
+          "message": {
+            "$ref": "#/properties/created_at"
+          },
+          "user_email": {
+            "allOf": [
+              {
+                "$ref": "#/properties/created_at"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "level",
+          "category",
+          "message",
+          "user_email"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sb-access-token"
+      }
     }
   }
 }
