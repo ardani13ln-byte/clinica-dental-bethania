@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 export type Route =
+  | { name: "dashboard" }
   | { name: "agenda" }
   | { name: "patients" }
   | { name: "patient"; id: number }
@@ -12,7 +13,8 @@ export type Route =
   | { name: "not-found" };
 
 function parse(path: string): Route {
-  if (path === "/" || path === "/agenda") return { name: "agenda" };
+  if (path === "/" || path === "/dashboard") return { name: "dashboard" };
+  if (path === "/agenda") return { name: "agenda" };
   if (path === "/patients") return { name: "patients" };
   const m = path.match(/^\/patients\/(\d+)$/);
   if (m) return { name: "patient", id: parseInt(m[1], 10) };

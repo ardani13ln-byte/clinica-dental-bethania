@@ -13,6 +13,7 @@ import { LabPage } from "./components/lab/lab-page";
 import { SettingsPage } from "./components/settings/settings-page";
 import { AdminPage } from "./components/admin/admin-page";
 import { LegalPage } from "./components/legal-page";
+import { DashboardPage } from "./components/dashboard/dashboard-page";
 
 export function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
@@ -47,6 +48,7 @@ function MainApp({ signOut, userEmail }: { signOut: () => Promise<void>; userEma
             </div>
           ) : (
             <>
+              {route.name === "dashboard" && <DashboardPage navigate={navigate} />}
               {route.name === "agenda" && <AgendaPage />}
               {route.name === "patients" && <PatientsList navigate={navigate} />}
               {route.name === "patient" && <PatientPage id={route.id} navigate={navigate} />}

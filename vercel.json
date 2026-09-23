@@ -3,10 +3,14 @@
   "framework": "vite",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "crons": [
+    { "path": "/api/cron/whatsapp-reminders", "schedule": "0 8 * * *" }
+  ],
   "rewrites": [
     { "source": "/docs", "destination": "/docs.html" },
     { "source": "/legal/(.*)", "destination": "/index.html" },
     { "source": "/patients/(.*)", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
     { "source": "/((?!api/|docs|openapi).*)", "destination": "/index.html" }
   ],
   "headers": [

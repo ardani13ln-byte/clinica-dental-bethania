@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Calendar, Users, Settings, FileBarChart2, FlaskConical,
-  LogOut, Shield, Sun, Moon,
+  LogOut, Shield, Sun, Moon, LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Route } from "@/hooks/use-router";
@@ -29,6 +29,7 @@ interface NavItem {
 }
 
 const allItems: Record<string, NavItem> = {
+  dashboard:   { label: "Dashboard",            icon: LayoutDashboard, path: "/dashboard", match: (r) => r.name === "dashboard" },
   agenda:     { label: "Agenda",              icon: Calendar,       path: "/agenda",   match: (r) => r.name === "agenda" },
   patients:   { label: "Pacientes",           icon: Users,          path: "/patients", match: (r) => r.name === "patients" || r.name === "patient" },
   lab:        { label: "Casos de laboratorio",icon: FlaskConical,   path: "/lab",      match: (r) => r.name === "lab" },
@@ -61,7 +62,7 @@ export function Sidebar({
       .catch(() => {});
   }, []);
 
-  const clinicKeys = ["agenda", "patients", "lab"];
+  const clinicKeys = ["dashboard", "agenda", "patients", "lab"];
   const adminKeys = ["reports", "settings", "admin"];
 
   const renderItem = (key: string) => {
