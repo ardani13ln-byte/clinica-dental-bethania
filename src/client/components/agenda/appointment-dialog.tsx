@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, MessageCircle } from "lucide-react";
 import { useApp } from "@/context";
 import { api } from "@/api";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { localDateTime, minutesOfDay } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { Appointment, AppointmentKind, AppointmentStatus, NewAppointment, Patient } from "@/types";
 
 interface Props {
@@ -298,10 +299,29 @@ export function AppointmentDialog({ open, onOpenChange, appointment, date, defau
 
           <DialogFooter className="items-center">
             {!isCreate && (
-              <Button type="button" variant="ghost" onClick={handleDelete} disabled={saving} className="mr-auto text-destructive hover:bg-destructive/10 hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
-                Eliminar
-              </Button>
+              <>
+                <Button type="button" variant="ghost" onClick={handleDelete} disabled={saving} className="mr-auto text-destructive hover:bg-destructive/10 hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                  Eliminar
+                </Button>
+                {appointment?.patient_phone && (
+                  <a
+                    href={buildWhatsAppUrl(
+                      appointment.patient_phone,
+                      appointment.start_time,
+                      [appointment.patient_first_name, appointment.patient_last_name].filter(Boolean).join(" "),
+                      appointment.treatment_name,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button type="button" variant="outline" className="gap-2">
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </a>
+                )}
+              </>
             )}
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancelar

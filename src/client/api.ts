@@ -169,6 +169,7 @@ function flattenAppointment(a: Record<string, unknown>) {
     patient_first_name: p?.first_name ?? null,
     patient_last_name: p?.last_name ?? null,
     patient_date_of_birth: p?.date_of_birth ?? null,
+    patient_phone: p?.phone ?? null,
     practitioner_name: pr?.name ?? null,
     practitioner_color: pr?.color ?? null,
     operatory_name: o?.name ?? null,

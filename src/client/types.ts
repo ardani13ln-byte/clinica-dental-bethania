@@ -71,6 +71,7 @@ export interface Appointment {
   patient_first_name?: string | null;
   patient_last_name?: string | null;
   patient_date_of_birth?: string | null;
+  patient_phone?: string | null;
   practitioner_name?: string | null;
   practitioner_color?: string | null;
   operatory_name?: string | null;

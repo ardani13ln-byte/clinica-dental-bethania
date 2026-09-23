@@ -1,7 +1,8 @@
-import { Mail, Phone, MapPin, Calendar, AlertTriangle } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, AlertTriangle, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import type { Patient } from "@/types";
 
 export function PatientOverview({ patient }: { patient: Patient }) {
@@ -30,7 +31,20 @@ export function PatientOverview({ patient }: { patient: Patient }) {
             {patient.email ? <a href={`mailto:${patient.email}`} className="text-primary hover:underline">{patient.email}</a> : "—"}
           </Detail>
           <Detail icon={Phone} label="Teléfono">
-            {patient.phone ? <a href={`tel:${patient.phone}`} className="text-primary hover:underline">{patient.phone}</a> : "—"}
+            {patient.phone ? (
+              <span className="flex items-center gap-2">
+                <a href={`tel:${patient.phone}`} className="text-primary hover:underline">{patient.phone}</a>
+                <a
+                  href={buildWhatsAppUrl(patient.phone, new Date().toISOString(), `${patient.first_name} ${patient.last_name}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950/40"
+                >
+                  <MessageCircle className="h-3 w-3" />
+                  WhatsApp
+                </a>
+              </span>
+            ) : "—"}
           </Detail>
           <Detail icon={MapPin} label="Dirección">
             {patient.address || "—"}

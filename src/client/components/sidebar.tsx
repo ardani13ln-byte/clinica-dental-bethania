@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import {
   Calendar, Users, Settings, FileBarChart2, FlaskConical,
-  LogOut, Shield,
+  LogOut, Shield, Sun, Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Route } from "@/hooks/use-router";
 import { api } from "../api";
+import { useTheme } from "../hooks/use-theme";
 
 function ToothIcon({ className }: { className?: string }) {
   return (
@@ -48,6 +49,7 @@ export function Sidebar({
   userEmail: string;
 }) {
   const [enabledKeys, setEnabledKeys] = useState<Set<string>>(new Set(Object.keys(allItems)));
+  const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     api<{ modules: { key: string; enabled: boolean }[] }>("GET", "/api/user-modules")
@@ -109,7 +111,17 @@ export function Sidebar({
       </nav>
 
       <div className="border-t px-3 py-3">
-        <div className="mb-2 truncate px-1 text-xs text-muted-foreground">{userEmail}</div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="truncate px-1 text-xs text-muted-foreground">{userEmail}</span>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => signOut()}
