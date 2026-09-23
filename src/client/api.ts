@@ -901,5 +901,38 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { profile: data } as T;
   }
 
+  // ── User modules (per-user visibility) ──
+  if (path === "/api/user-modules" && method === "GET") {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) throw new Error("No autenticado");
+    const { data, error } = await supabase.rpc("get_user_modules", { uid });
+    checkError({ error }, "user modules");
+    return { modules: data } as T;
+  }
+  if (path.startsWith("/api/user-modules/") && method === "GET") {
+    const userId = path.split("/")[3];
+    const { data, error } = await supabase.rpc("get_user_modules", { uid: userId });
+    checkError({ error }, "user modules");
+    return { modules: data } as T;
+  }
+  if (path === "/api/user-modules" && method === "PUT") {
+    const d = body as { user_id: string; module_key: string; enabled: boolean };
+    const { data: existing } = await supabase.from("user_modules")
+      .select("id").eq("user_id", d.user_id).eq("module_key", d.module_key).maybeSingle();
+    if (existing) {
+      const { data, error } = await supabase.from("user_modules").update({ enabled: d.enabled })
+        .eq("user_id", d.user_id).eq("module_key", d.module_key).select("*").single();
+      checkError({ error }, "user module update");
+      return { user_module: data } as T;
+    } else {
+      const { data, error } = await supabase.from("user_modules").insert({
+        user_id: d.user_id, module_key: d.module_key, enabled: d.enabled,
+      }).select("*").single();
+      checkError({ error }, "user module insert");
+      return { user_module: data } as T;
+    }
+  }
+
   throw new Error(`Unhandled API route: ${method} ${path}`);
 }

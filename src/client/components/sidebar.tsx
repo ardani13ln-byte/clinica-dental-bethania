@@ -50,7 +50,7 @@ export function Sidebar({
   const [enabledKeys, setEnabledKeys] = useState<Set<string>>(new Set(Object.keys(allItems)));
 
   useEffect(() => {
-    api<{ modules: { key: string; enabled: boolean }[] }>("GET", "/api/modules")
+    api<{ modules: { key: string; enabled: boolean }[] }>("GET", "/api/user-modules")
       .then((data) => {
         if (data.modules?.length) {
           setEnabledKeys(new Set(data.modules.filter(m => m.enabled).map(m => m.key)));
