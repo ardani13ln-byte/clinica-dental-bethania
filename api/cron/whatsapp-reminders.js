@@ -47,11 +47,7 @@ export default async function handler(req, res) {
 
   const { data: appointments, error } = await supabase
     .from("appointments")
-    .select(`
-      id, start_time, end_time, status, kind,
-      patients:patient_id (first_name, last_name, phone ),
-      treatment_types:treatment_type_id (name)
-    `)
+    .select("id, start_time, end_time, status, kind, patient_id, treatment_type_id")
     .gte("start_time", tomorrow.toISOString())
     .lt("start_time", dayAfter.toISOString())
     .eq("kind", "patient")
@@ -64,11 +60,27 @@ export default async function handler(req, res) {
 
   const reminders = [];
   for (const appt of appointments || []) {
-    const patient = appt.patients;
+    if (!appt.patient_id) continue;
+
+    const { data: patient } = await supabase
+      .from("patients")
+      .select("first_name, last_name, phone")
+      .eq("id", appt.patient_id)
+      .single();
+
     if (!patient || !patient.phone) continue;
 
+    let treatmentName = null;
+    if (appt.treatment_type_id) {
+      const { data: tt } = await supabase
+        .from("treatment_types")
+        .select("name")
+        .eq("id", appt.treatment_type_id)
+        .single();
+      treatmentName = tt?.name ?? null;
+    }
+
     const patientName = `${patient.first_name ?? ""} ${patient.last_name ?? ""}`.trim();
-    const treatmentName = appt.treatment_types?.name ?? null;
     const treatment = treatmentName ? ` para ${treatmentName}` : "";
     const dateStr = formatDate(appt.start_time);
 
