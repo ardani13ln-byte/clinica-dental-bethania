@@ -852,7 +852,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
 
   // ── System logs (superadmin) ──
-  if (path === "/api/system-logs" && method === "GET") {
+  if (path.startsWith("/api/system-logs") && !path.startsWith("/api/system-logs/") && method === "GET") {
     const qs = path.split("?")[1] || "";
     const params = new URLSearchParams(qs);
     const level = params.get("level");
