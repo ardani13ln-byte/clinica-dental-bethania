@@ -4,7 +4,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY || "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || SUPABASE_KEY;
 
-function formatPhone(phone: string): string {
+function formatPhone(phone) {
   let digits = phone.replace(/\D/g, "");
   if (digits.length === 8 && !digits.startsWith("502")) {
     digits = "502" + digits;
@@ -12,7 +12,7 @@ function formatPhone(phone: string): string {
   return digits;
 }
 
-function formatDate(startTime: string): string {
+function formatDate(startTime) {
   const d = new Date(startTime);
   const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
