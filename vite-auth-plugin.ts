@@ -16,7 +16,15 @@ export function authMiddlewarePlugin(): Plugin {
         }
         const chunks: Buffer[] = [];
         for await (const chunk of req) chunks.push(chunk as Buffer);
-        const { email, password } = JSON.parse(Buffer.concat(chunks).toString());
+        let parsed: { email?: unknown; password?: unknown };
+        try {
+          parsed = JSON.parse(Buffer.concat(chunks).toString());
+        } catch {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "JSON inválido" }));
+          return;
+        }
+        const { email, password } = parsed;
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });

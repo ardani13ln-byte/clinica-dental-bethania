@@ -88,6 +88,27 @@ const InvoiceSchema = z.object({
   notes: optStr,
 });
 
+/**
+ * A PUT carries only the fields it changes, so `amount_paid` and `total` are
+ * resolved against the stored row before the cross-field rule is applied.
+ */
+function checkInvoiceSettlement(
+  next: { total: number; amount_paid: number },
+  current: { total: number; amount_paid: number } | undefined,
+): void {
+  if (next.amount_paid > next.total) {
+    throw new Error(
+      `Validación invoice: amount_paid — no puede superar el total (${next.amount_paid} > ${next.total})`,
+    );
+  }
+  if (current && next.amount_paid < current.amount_paid) {
+    throw new Error(
+      `Validación invoice: amount_paid — un pago registrado no se puede reducir ` +
+        `(${next.amount_paid} < ${current.amount_paid}); emite una factura de reversión`,
+    );
+  }
+}
+
 const WaitingListSchema = z.object({
   patient_id: z.number().int(),
   treatment_type_id: optNum,
@@ -139,6 +160,22 @@ const LabCaseSchema = z.object({
   status: z.enum(["sent", "received", "seated", "cancelled"]).optional(),
   notes: optStr,
 });
+
+/** A setting value arrives as a number or as its decimal string form (the UI
+ *  sends `String(v)`), but it must still be an integer inside an explicit
+ *  range — minutes-since-midnight for the day bounds, 1..1440 for a slot. */
+const numericSetting = (min: number, max: number) =>
+  z.union([z.number(), z.string().regex(/^-?\d+$/)])
+    .transform((v) => (typeof v === "number" ? v : parseInt(v, 10)))
+    .pipe(z.number().int().min(min).max(max));
+
+// Only the three declared keys may be written, and each numeric value is
+// range-validated before it reaches `parseSettings` / the agenda geometry.
+const SettingsPatchSchema = z.object({
+  day_start_minute: numericSetting(0, 1440).optional(),
+  day_end_minute: numericSetting(0, 1440).optional(),
+  slot_minutes: numericSetting(1, 1440).optional(),
+}).strict();
 
 function validate<T>(schema: z.ZodSchema<T>, data: unknown, label: string): T {
   const result = schema.safeParse(data);
@@ -418,7 +455,8 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/patients/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("patients").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const d = validate(PatientSchema.partial(), body, "patient");
+    const { data, error } = await supabase.from("patients").update(d).eq("id", id).select("*").single();
     checkError({ error }, "patient update");
     return { patient: data } as T;
   }
@@ -570,7 +608,21 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/invoices/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("invoices").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const d = validate(InvoiceSchema.partial().omit({ patient_id: true }), body, "invoice");
+    const { data: current, error: readErr } = await supabase
+      .from("invoices")
+      .select("total, amount_paid")
+      .eq("id", id)
+      .maybeSingle();
+    checkError({ error: readErr }, "invoice read");
+    checkInvoiceSettlement(
+      {
+        total: d.total ?? current?.total ?? 0,
+        amount_paid: d.amount_paid ?? current?.amount_paid ?? 0,
+      },
+      current ?? undefined,
+    );
+    const { data, error } = await supabase.from("invoices").update(d as Record<string, unknown>).eq("id", id).select("*").single();
     checkError({ error }, "invoice update");
     return { invoice: data } as T;
   }
@@ -818,8 +870,8 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     return { settings: out } as T;
   }
   if (path === "/api/settings" && method === "PUT") {
-    const entries = Object.entries(body as Record<string, unknown>).filter(([, v]) => v !== undefined && v !== null);
-    const rows = entries.map(([key, value]) => ({ key, value: String(value), updated_at: nowStr() }));
+    const d = validate(SettingsPatchSchema, body, "settings");
+    const rows = Object.entries(d).map(([key, value]) => ({ key, value: String(value), updated_at: nowStr() }));
     if (rows.length) {
       const { error } = await supabase.from("settings").upsert(rows, { onConflict: "key" });
       checkError({ error }, "settings upsert");

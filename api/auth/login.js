@@ -4,6 +4,28 @@ const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY || "";
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY || "";
 
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+const attemptsByKey = new Map();
+
+function rateLimitKey(ip, email) {
+  return `${(ip || "").split(",")[0].trim()}|${String(email || "").toLowerCase()}`;
+}
+
+// Devuelve true si el intento debe ser bloqueado por superar el limite.
+function isRateLimited(ip, email, now = Date.now()) {
+  const key = rateLimitKey(ip, email);
+  const recent = (attemptsByKey.get(key) || []).filter(t => now - t < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT_MAX_ATTEMPTS) {
+    attemptsByKey.set(key, recent);
+    return true;
+  }
+  recent.push(now);
+  attemptsByKey.set(key, recent);
+  if (attemptsByKey.size > 5000) attemptsByKey.clear();
+  return false;
+}
+
 async function verifyTurnstile(token, ip) {
   if (!TURNSTILE_SECRET) return true;
   const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -24,7 +46,13 @@ export default async function handler(req, res) {
   const { email, password, turnstileToken } = req.body;
   const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "";
 
-  if (TURNSTILE_SECRET && turnstileToken && !await verifyTurnstile(turnstileToken, ip)) {
+  if (isRateLimited(ip, email)) {
+    res.setHeader("Retry-After", String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)));
+    res.status(429).json({ error: "Demasiados intentos. Intente de nuevo mas tarde." });
+    return;
+  }
+
+  if (TURNSTILE_SECRET && !await verifyTurnstile(turnstileToken || "", ip)) {
     res.status(403).json({ error: "Verificación antibot fallida" });
     return;
   }

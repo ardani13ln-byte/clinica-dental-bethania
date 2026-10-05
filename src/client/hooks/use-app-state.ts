@@ -31,7 +31,12 @@ const DEFAULT_SETTINGS: PracticeSettings = {
 function parseSettings(raw: Record<string, string>): PracticeSettings {
   const num = (key: keyof PracticeSettings) => {
     const v = parseInt(raw[key], 10);
-    return Number.isFinite(v) ? v : DEFAULT_SETTINGS[key];
+    // Defence in depth: a finite but out-of-range value still breaks the
+    // agenda geometry (320000px grid, 3335 hour labels), so clamp instead of
+    // trusting whatever was persisted in `settings`.
+    if (!Number.isFinite(v)) return DEFAULT_SETTINGS[key];
+    const fallback = DEFAULT_SETTINGS[key];
+    return v >= 0 && v <= 1440 ? v : fallback;
   };
   return {
     day_start_minute: num("day_start_minute"),

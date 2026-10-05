@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm db:migrate && concurrently -n ui,api -c cyan,green \"vite\" \"wrangler dev --port 8788 --ip 0.0.0.0\"",
+    "dev": "pnpm db:migrate && concurrently -n ui,api -c cyan,green \"vite\" \"wrangler dev --port 8788 --ip 127.0.0.1\"",
+    "dev:lan": "pnpm db:migrate && concurrently -n ui,api -c cyan,green \"vite --host\" \"wrangler dev --port 8788 --ip 0.0.0.0\"",
     "db:migrate": "wrangler d1 execute open-dentist-db --local --file=src/server/schema.sql",
     "build": "vite build",
     "prebuild": "tsx scripts/generate-openapi.ts",

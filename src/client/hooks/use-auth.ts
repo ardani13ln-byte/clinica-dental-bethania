@@ -58,7 +58,16 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      const { data } = await supabase.auth.getSession();
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: data.session?.refresh_token ?? null }),
+      });
+    } catch {
+      // Igual se cierra la sesion local.
+    }
     await supabase.auth.signOut();
     setUser(null);
   }, []);

@@ -1041,6 +1041,22 @@ app.get("/api/reports/summary", async (c) => {
 
 // ── Settings (key/value) ───────────────────────────────────────────
 
+/** A setting value arrives as a number or as its decimal string form (the UI
+ *  sends `String(v)`), but it must still be an integer inside an explicit
+ *  range — minutes-since-midnight for the day bounds, 1..1440 for a slot. */
+const numericSetting = (min: number, max: number) =>
+  z.union([z.number(), z.string().regex(/^-?\d+$/)])
+    .transform((v) => (typeof v === "number" ? v : parseInt(v, 10)))
+    .pipe(z.number().int().min(min).max(max));
+
+// Only the three declared keys may be written, and each numeric value is
+// range-validated before it reaches parseSettings / the agenda geometry.
+const SettingsInput = z.object({
+  day_start_minute: numericSetting(0, 1440).optional(),
+  day_end_minute: numericSetting(0, 1440).optional(),
+  slot_minutes: numericSetting(1, 1440).optional(),
+}).strict();
+
 app.get("/api/settings", async (c) => {
   const rows = await query<{ key: string; value: string }>(
     "SELECT key, value FROM settings",
@@ -1051,12 +1067,9 @@ app.get("/api/settings", async (c) => {
 });
 
 app.put("/api/settings", async (c) => {
-  let body: unknown;
-  try { body = await c.req.json(); } catch { return c.json({ error: "Invalid JSON" }, 400); }
-  if (!body || typeof body !== "object") return c.json({ error: "Body must be an object" }, 400);
-  const entries = Object.entries(body as Record<string, unknown>)
-    .filter(([, v]) => v !== undefined && v !== null);
-  for (const [key, value] of entries) {
+  const parsed = await parseJson(c, SettingsInput);
+  if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+  for (const [key, value] of Object.entries(parsed.data)) {
     await run(
       `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`,

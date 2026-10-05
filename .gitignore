@@ -7,3 +7,5 @@ dist
 .dev.vars
 .env
 .vercel
+strix_runs/
+rl_repro.py
