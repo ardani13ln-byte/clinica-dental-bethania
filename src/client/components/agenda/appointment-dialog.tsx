@@ -306,6 +306,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, date, defau
                 </Button>
                 {appointment?.patient_phone && (
                   <a
+                    data-tour="agenda-whatsapp"
                     href={buildWhatsAppUrl(
                       appointment.patient_phone,
                       appointment.start_time,

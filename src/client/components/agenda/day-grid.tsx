@@ -98,6 +98,7 @@ export function DayGrid({ date, operatories, appointments, onSlotClick, onAppoin
           return (
             <div
               key={op.id}
+              data-tour={isFirst ? "agenda-calendario" : undefined}
               className={cn("flex w-56 shrink-0 flex-col bg-card", !isFirst && "border-l border-border/50")}
             >
               {/* Header */}

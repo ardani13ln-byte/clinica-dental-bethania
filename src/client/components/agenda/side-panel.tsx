@@ -30,7 +30,7 @@ export function AgendaSidePanel() {
   }
 
   return (
-    <aside className="flex h-full w-80 shrink-0 flex-col border-l bg-card">
+    <aside className="flex h-full w-80 shrink-0 flex-col border-l bg-card" data-tour="agenda-panel">
       <div className="flex items-center justify-between border-b px-3 py-2">
         <span className="text-sm font-semibold">Panel lateral</span>
         <Button variant="ghost" size="icon" onClick={() => setCollapsed(true)} aria-label="Colapsar panel lateral">

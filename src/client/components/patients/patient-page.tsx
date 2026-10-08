@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import type { Patient } from "@/types";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 import { PatientOverview } from "./patient-overview";
 import { ToothChart } from "./tooth-chart";
 import { TreatmentPlan } from "./treatment-plan";
@@ -21,11 +22,31 @@ interface Props {
   navigate: (to: string) => void;
 }
 
+const PESTANAS: { value: string; seccion: string; titulo: string }[] = [
+  { value: "overview", seccion: "resumen", titulo: "Resumen" },
+  { value: "insurance", seccion: "seguro", titulo: "Seguro" },
+  { value: "chart", seccion: "carta", titulo: "Carta dental" },
+  { value: "plan", seccion: "plan", titulo: "Plan de tratamiento" },
+  { value: "notes", seccion: "notas", titulo: "Notas clínicas" },
+  { value: "billing", seccion: "facturacion", titulo: "Facturación" },
+];
+
 export function PatientPage({ id, navigate }: Props) {
   const app = useApp();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState("overview");
+
+  useEffect(() => {
+    setSeccionTour("resumen");
+  }, [id]);
+
+  function cambiarTab(value: string) {
+    setTab(value);
+    const pestana = PESTANAS.find((p) => p.value === value);
+    setSeccionTour(pestana ? pestana.seccion : null);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +94,7 @@ export function PatientPage({ id, navigate }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3" data-tour="paciente-encabezado">
         <Breadcrumbs
           items={[
             { label: "Pacientes", onClick: () => navigate("/patients") },
@@ -115,14 +136,11 @@ export function PatientPage({ id, navigate }: Props) {
       </div>
 
       <div className="flex-1 overflow-auto p-4">
-        <Tabs defaultValue="overview">
-          <TabsList>
-            <TabsTrigger value="overview">Resumen</TabsTrigger>
-            <TabsTrigger value="insurance">Seguro</TabsTrigger>
-            <TabsTrigger value="chart">Carta dental</TabsTrigger>
-            <TabsTrigger value="plan">Plan de tratamiento</TabsTrigger>
-            <TabsTrigger value="notes">Notas clínicas</TabsTrigger>
-            <TabsTrigger value="billing">Facturación</TabsTrigger>
+        <Tabs value={tab} onValueChange={cambiarTab}>
+          <TabsList data-tour="paciente-pestanas">
+            {PESTANAS.map((p) => (
+              <TabsTrigger key={p.value} value={p.value}>{p.titulo}</TabsTrigger>
+            ))}
           </TabsList>
           <TabsContent value="overview" className="mt-4">
             <PatientOverview patient={patient} />

@@ -9,24 +9,43 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, colorClasses } from "@/lib/utils";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 import type { Operatory, Practitioner, PractitionerRole, TreatmentType } from "@/types";
 
 const COLOR_TOKENS = ["sky", "emerald", "amber", "rose", "violet", "fuchsia", "teal", "orange", "slate"] as const;
 const ROLES: PractitionerRole[] = ["dentist", "hygienist", "assistant"];
 
+const PESTANAS: { value: string; seccion: string; titulo: string }[] = [
+  { value: "operatories", seccion: "consultorios", titulo: "Consultorios" },
+  { value: "practitioners", seccion: "odontologos", titulo: "Odontólogos" },
+  { value: "treatments", seccion: "tratamientos", titulo: "Tipos de tratamiento" },
+  { value: "hours", seccion: "horarios", titulo: "Horarios" },
+];
+
 export function SettingsPage() {
+  const [tab, setTab] = useState("operatories");
+
+  function cambiarTab(value: string) {
+    setTab(value);
+    const pestana = PESTANAS.find((p) => p.value === value);
+    setSeccionTour(pestana ? pestana.seccion : null);
+  }
+
+  useEffect(() => {
+    setSeccionTour("consultorios");
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3" data-tour="configuracion-encabezado">
         <h1 className="text-lg font-semibold tracking-tight">Configuración</h1>
       </div>
       <div className="flex-1 overflow-auto p-4">
-        <Tabs defaultValue="operatories">
-          <TabsList>
-            <TabsTrigger value="operatories">Consultorios</TabsTrigger>
-            <TabsTrigger value="practitioners">Odontólogos</TabsTrigger>
-            <TabsTrigger value="treatments">Tipos de tratamiento</TabsTrigger>
-            <TabsTrigger value="hours">Horarios</TabsTrigger>
+        <Tabs value={tab} onValueChange={cambiarTab}>
+          <TabsList data-tour="configuracion-pestanas">
+            {PESTANAS.map((p) => (
+              <TabsTrigger key={p.value} value={p.value}>{p.titulo}</TabsTrigger>
+            ))}
           </TabsList>
           <TabsContent value="operatories" className="mt-4">
             <OperatoriesTab />
@@ -90,7 +109,7 @@ function HoursTab() {
   }
 
   return (
-    <Card>
+    <Card data-tour="configuracion-horarios">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
@@ -194,7 +213,7 @@ function OperatoriesTab() {
   }
 
   return (
-    <Card>
+    <Card data-tour="configuracion-consultorios">
       <CardHeader>
         <CardTitle>Consultorios</CardTitle>
       </CardHeader>
@@ -320,7 +339,7 @@ function PractitionersTab() {
   }
 
   return (
-    <Card>
+    <Card data-tour="configuracion-odontologos">
       <CardHeader>
         <CardTitle>Odontólogos</CardTitle>
       </CardHeader>
@@ -455,7 +474,7 @@ function TreatmentTypesTab() {
   }
 
   return (
-    <Card>
+    <Card data-tour="configuracion-tratamientos">
       <CardHeader>
         <CardTitle>Tipos de tratamiento</CardTitle>
       </CardHeader>

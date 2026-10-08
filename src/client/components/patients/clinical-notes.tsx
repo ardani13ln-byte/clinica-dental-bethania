@@ -61,7 +61,7 @@ export function ClinicalNotes({ patientId }: { patientId: number }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="paciente-notas">
       <Card>
         <CardHeader>
           <CardTitle>Agregar nota</CardTitle>

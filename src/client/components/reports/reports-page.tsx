@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { api } from "@/api";
 import { useApp } from "@/context";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,10 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setSeccionTour(null);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -56,14 +61,14 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 border-b bg-card px-4 py-3" data-tour="dashboard-encabezado">
         <h1 className="text-lg font-semibold tracking-tight">Dashboard</h1>
         <p className="text-xs text-muted-foreground">Resumen operativo · mes a la fecha</p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-auto p-4">
         {/* KPI cards */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-tour="dashboard-indicadores">
           <KpiCard icon={CalendarDays}  label="Citas de hoy" value={data.today_appointments.toString()} tone="sky" />
           <KpiCard icon={CalendarRange} label="Esta semana"             value={data.week_appointments.toString()}  tone="emerald" />
           <KpiCard icon={TrendingUp}    label="Producción del mes"        value={`Q${data.month_production.toFixed(0)}`} sub={`${data.month_appointments} citas`} tone="violet" />
@@ -72,7 +77,7 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
 
         {/* Today's schedule + alerts */}
         <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2" data-tour="dashboard-citas-hoy">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Clock className="h-4 w-4" />
@@ -107,7 +112,7 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dashboard-alertas">
             <CardHeader>
               <CardTitle className="text-base">Requiere atención</CardTitle>
             </CardHeader>
@@ -121,7 +126,7 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
 
         {/* Monthly results + Aged receivables */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
+          <Card data-tour="dashboard-resultados">
             <CardHeader>
               <CardTitle className="text-base">Resultados de citas (mes)</CardTitle>
             </CardHeader>
@@ -132,7 +137,7 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="dashboard-cartera">
             <CardHeader>
               <CardTitle className="text-base">Cuentas por cobrar</CardTitle>
               <p className="text-xs text-muted-foreground">Saldos pendientes por días</p>
@@ -146,8 +151,7 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {/* By treatment */}
+        <div className="grid gap-4 lg:grid-cols-2" data-tour="dashboard-desglose">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Tratamientos principales (mes)</CardTitle>

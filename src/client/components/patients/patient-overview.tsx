@@ -14,7 +14,7 @@ export function PatientOverview({ patient }: { patient: Patient }) {
   const age = patient.date_of_birth ? computeAge(patient.date_of_birth) : null;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3" data-tour="paciente-contacto">
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Contacto</CardTitle>

@@ -13,6 +13,7 @@ import { LabPage } from "./components/lab/lab-page";
 import { SettingsPage } from "./components/settings/settings-page";
 import { AdminPage } from "./components/admin/admin-page";
 import { LegalPage } from "./components/legal-page";
+import { TourPagina } from "./components/tour/TourPagina";
 
 export function App() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
@@ -34,7 +35,7 @@ export function App() {
 
 function MainApp({ signOut, userEmail }: { signOut: () => Promise<void>; userEmail: string }) {
   const state = useAppState();
-  const { route, navigate } = useRouter();
+  const { route, path, navigate } = useRouter();
 
   return (
     <AppContext.Provider value={state}>
@@ -62,6 +63,7 @@ function MainApp({ signOut, userEmail }: { signOut: () => Promise<void>; userEma
           )}
         </main>
         <ErrorBanner />
+        <TourPagina route={route} path={path} />
       </div>
     </AppContext.Provider>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../../api";
+import { setSeccionTour } from "../tour/uso-tour";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
@@ -11,11 +12,28 @@ type Module = { key: string; name: string; icon: string; enabled: boolean; sort_
 type Log = { id: number; created_at: string; level: string; category: string; message: string; user_email: string | null; metadata: Record<string, unknown> };
 type Profile = { id: string; email: string; role: string; full_name: string | null; active: boolean; created_at: string };
 
+const PESTANAS: { value: "users" | "modules" | "logs"; seccion: string; titulo: string }[] = [
+  { value: "users", seccion: "usuarios", titulo: "Usuarios" },
+  { value: "modules", seccion: "modulos", titulo: "Módulos" },
+  { value: "logs", seccion: "logs", titulo: "Logs" },
+];
+
 export function AdminPage() {
   const [tab, setTab] = useState<"modules" | "logs" | "users">("users");
+
+  function cambiarTab(value: "modules" | "logs" | "users") {
+    setTab(value);
+    const pestana = PESTANAS.find((p) => p.value === value);
+    setSeccionTour(pestana ? pestana.seccion : null);
+  }
+
+  useEffect(() => {
+    setSeccionTour("usuarios");
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur px-6 py-4">
+      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur px-6 py-4" data-tour="admin-encabezado">
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold">Administración del Sistema</h1>
@@ -23,10 +41,10 @@ export function AdminPage() {
             <FileText className="h-4 w-4" /> API Docs
           </a>
         </div>
-        <div className="mt-3 flex gap-1">
-          <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />} label="Usuarios" />
-          <TabBtn active={tab === "modules"} onClick={() => setTab("modules")} icon={<Power className="h-4 w-4" />} label="Módulos" />
-          <TabBtn active={tab === "logs"} onClick={() => setTab("logs")} icon={<ScrollText className="h-4 w-4" />} label="Logs" />
+        <div className="mt-3 flex gap-1" data-tour="admin-pestanas">
+          <TabBtn active={tab === "users"} onClick={() => cambiarTab("users")} icon={<Users className="h-4 w-4" />} label="Usuarios" />
+          <TabBtn active={tab === "modules"} onClick={() => cambiarTab("modules")} icon={<Power className="h-4 w-4" />} label="Módulos" />
+          <TabBtn active={tab === "logs"} onClick={() => cambiarTab("logs")} icon={<ScrollText className="h-4 w-4" />} label="Logs" />
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
@@ -92,7 +110,7 @@ function UsersTab() {
   if (error) return <ErrorBox error={error} onRetry={load} />;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-3">
+    <div className="mx-auto max-w-3xl space-y-3" data-tour="admin-usuarios">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">Gestiona usuarios, roles y módulos asignados a cada uno.</p>
         <Button onClick={() => setShowCreate(true)} size="sm">
@@ -250,7 +268,7 @@ function ModulesTab() {
   if (error) return <ErrorBox error={error} onRetry={() => window.location.reload()} />;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-3">
+    <div className="mx-auto max-w-3xl space-y-3" data-tour="admin-modulos">
       <p className="text-sm text-muted-foreground mb-4">Catálogo de módulos del sistema. Asigna módulos a cada usuario desde la pestaña "Usuarios".</p>
       {modules.map(mod => (
         <div key={mod.key} className="flex items-center justify-between rounded-xl border bg-card p-4">
@@ -302,7 +320,7 @@ function LogsTab() {
   const levelColor = (lv: string) => lv === "error" || lv === "critical" ? "border-l-red-500" : lv === "warning" ? "border-l-amber-500" : "border-l-blue-500";
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto max-w-4xl space-y-4" data-tour="admin-logs">
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />

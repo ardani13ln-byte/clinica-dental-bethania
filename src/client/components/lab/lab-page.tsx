@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDate } from "@/lib/utils";
 import type { LabCase, LabStatus, Patient } from "@/types";
 import { MobileFAB } from "@/components/ui/mobile-fab";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 
 const STATUSES: LabStatus[] = ["sent", "in_lab", "received", "seated", "cancelled"];
 const CASE_TYPES = ["Corona", "Puente", "Inlay/Onlay", "Facheta", "Dentadura", "Parcial", "Alineador", "Protector nocturno", "Pilar de implante", "Otro"];
@@ -31,6 +32,10 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
   const [statusFilter, setStatusFilter] = useState<LabStatus | "all">("all");
   const [editing, setEditing] = useState<LabCase | null>(null);
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    setSeccionTour(null);
+  }, []);
 
   async function load() {
     try {
@@ -83,7 +88,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3" data-tour="laboratorio-barra">
         <h1 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
           <FlaskConical className="h-5 w-5" /> Casos de laboratorio
         </h1>
@@ -94,7 +99,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
               {overdueCount} vencido
             </span>
           )}
-          <div className="w-44">
+          <div className="w-44" data-tour="laboratorio-filtro">
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as LabStatus | "all")}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -103,14 +108,14 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => setCreating(true)} size="sm">
+          <Button onClick={() => setCreating(true)} size="sm" data-tour="laboratorio-nuevo">
             <Plus className="h-4 w-4" /> Nuevo caso
           </Button>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden" data-tour="laboratorio-tabla">
           <CardContent className="p-0">
             {loading ? (
               <p className="py-12 text-center text-sm text-muted-foreground">Cargando…</p>

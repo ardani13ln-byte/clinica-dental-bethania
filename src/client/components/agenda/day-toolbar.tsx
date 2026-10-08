@@ -19,7 +19,7 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
   };
 
   return (
-    <div className="sticky top-0 z-20 flex items-center gap-3 border-b bg-card px-6 py-4">
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b bg-card px-6 py-4" data-tour="agenda-barra">
       <div>
         <h2 className="text-lg font-semibold tracking-tight">
           {formatDate(date, { month: "long", year: "numeric" })}
@@ -70,7 +70,7 @@ export function DayToolbar({ date, onChange, onCreate }: Props) {
 
         <div className="h-6 w-px bg-border" />
 
-        <Button onClick={onCreate} size="sm">
+        <Button onClick={onCreate} size="sm" data-tour="agenda-nueva">
           <Plus className="h-4 w-4" /> Nueva cita
         </Button>
       </div>

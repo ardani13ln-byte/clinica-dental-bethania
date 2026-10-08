@@ -96,7 +96,7 @@ export function Billing({ patientId }: { patientId: number }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="paciente-facturas">
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryStat label="Facturado"  amount={summary.billed}  tone="sky" />
         <SummaryStat label="Pagado"    amount={summary.paid}    tone="emerald" />

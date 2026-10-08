@@ -7,9 +7,13 @@ import { DayGrid } from "./day-grid";
 import { AppointmentDialog } from "./appointment-dialog";
 import { AgendaSidePanel } from "./side-panel";
 import { MobileFAB } from "@/components/ui/mobile-fab";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 
 export function AgendaPage() {
   const app = useApp();
+  useEffect(() => {
+    setSeccionTour(null);
+  }, []);
   const [date, setDate] = useState<string>(() => toIsoDate(new Date()));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Appointment | null>(null);

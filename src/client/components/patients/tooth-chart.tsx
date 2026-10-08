@@ -108,7 +108,7 @@ export function ToothChart({ patientId }: { patientId: number }) {
   }, [conditions]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="paciente-carta">
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-3">

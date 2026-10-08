@@ -10,9 +10,13 @@ import { formatDate } from "@/lib/utils";
 import type { Patient } from "@/types";
 import { PatientDialog } from "./patient-dialog";
 import { MobileFAB } from "@/components/ui/mobile-fab";
+import { setSeccionTour } from "@/components/tour/uso-tour";
 
 export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
   const app = useApp();
+  useEffect(() => {
+    setSeccionTour(null);
+  }, []);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -45,9 +49,9 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3" data-tour="pacientes-barra">
         <h1 className="text-lg font-semibold tracking-tight">Pacientes</h1>
-        <div className="relative ml-auto w-full max-w-sm">
+        <div className="relative ml-auto w-full max-w-sm" data-tour="pacientes-buscar">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
@@ -56,14 +60,14 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => setDialogOpen(true)} size="sm">
+        <Button onClick={() => setDialogOpen(true)} size="sm" data-tour="pacientes-nuevo">
           <Plus className="h-4 w-4" />
           Nuevo paciente
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden" data-tour="pacientes-tabla">
           <Table>
             <TableHeader>
               <TableRow>

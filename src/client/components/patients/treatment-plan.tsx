@@ -107,7 +107,7 @@ export function TreatmentPlan({ patientId }: { patientId: number }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="paciente-plan">
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryCard label="Planificado"   amount={totals.planned}   tone="sky" />
         <SummaryCard label="Aceptado"  amount={totals.accepted}  tone="emerald" />
