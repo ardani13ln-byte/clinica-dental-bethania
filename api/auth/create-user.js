@@ -50,21 +50,30 @@ export default async function handler(req, res) {
   }
 
   // Crear profile (activo: el trigger lo crea inactivo; la creacion por
-  // superadmin activa de una vez)
-  await supabase.from("profiles").upsert({
+  // superadmin activa de una vez). Todo error se devuelve: nunca 200 falso.
+  const { error: profileError } = await supabase.from("profiles").upsert({
     id: data.user.id,
     email,
     role: finalRole,
     full_name: full_name || null,
     active: true,
   });
+  if (profileError) {
+    await supabase.auth.admin.deleteUser(data.user.id).catch(() => {});
+    res.status(500).json({ error: "Usuario creado pero perfil falló: " + profileError.message });
+    return;
+  }
 
   // Darle todos los modulos habilitados por defecto
   const { data: mods } = await supabase.from("modules").select("key");
   if (mods?.length) {
-    await supabase.from("user_modules").insert(
+    const { error: modError } = await supabase.from("user_modules").insert(
       mods.map(m => ({ user_id: data.user.id, module_key: m.key, enabled: true }))
     );
+    if (modError) {
+      res.status(500).json({ error: "Usuario creado pero módulos fallaron: " + modError.message });
+      return;
+    }
   }
 
   // Log

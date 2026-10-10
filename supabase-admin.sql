@@ -419,4 +419,22 @@ CREATE POLICY user_modules_write ON public.user_modules TO authenticated USING (
 -- PostgreSQL database dump complete
 --
 
-
+-- 6. Anti-escalacion: ni siquiera un admin puede tocar superadmins (el guard
+-- de ultimo-superadmin del cliente no frena llamadas directas a la API).
+-- service_role / SQL Editor (sin JWT) se permiten: son el servidor.
+CREATE OR REPLACE FUNCTION public.guard_profiles_escalation() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.is_superadmin() THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+  IF (TG_OP <> 'INSERT' AND OLD.role = 'superadmin')
+     OR (TG_OP <> 'DELETE' AND NEW.role = 'superadmin') THEN
+    RAISE EXCEPTION 'Solo un superadmin puede asignar, modificar o eliminar superadmins';
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END $$;
+DROP TRIGGER IF EXISTS guard_profiles_escalation ON public.profiles;
+CREATE TRIGGER guard_profiles_escalation
+  BEFORE INSERT OR UPDATE OR DELETE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.guard_profiles_escalation();
