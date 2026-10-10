@@ -60,7 +60,7 @@ export default async function handler(req, res) {
   });
   if (profileError) {
     await supabase.auth.admin.deleteUser(data.user.id).catch(() => {});
-    res.status(500).json({ error: "Usuario creado pero perfil falló: " + profileError.message });
+    res.status(500).json({ error: "No se pudo crear el usuario: " + profileError.message });
     return;
   }
 
