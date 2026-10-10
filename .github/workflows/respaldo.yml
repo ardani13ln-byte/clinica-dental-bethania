@@ -1,0 +1,35 @@
+name: Respaldo semanal BD
+
+on:
+  schedule:
+    # Domingos 09:00 UTC = 03:00 America/Guatemala
+    - cron: "0 9 * * 0"
+  workflow_dispatch: {}
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Respaldo pg_dump
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client > /dev/null
+          ARCHIVO="respaldo-$(date +%Y%m%d-%H%M%S).dump"
+          pg_dump "$DATABASE_URL" --format=custom --compress=9 \
+            --no-owner --no-privileges --file="$ARCHIVO"
+          ls -la "$ARCHIVO"
+          echo "ARCHIVO=$ARCHIVO" >> "$GITHUB_ENV"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verificar integridad
+        run: |
+          pg_restore --list "$ARCHIVO" | grep -c "TABLE DATA"
+          pg_restore --list "$ARCHIVO" | grep "TABLE DATA public patients" \
+            || (echo "Falta tabla patients" && exit 1)
+
+      - name: Guardar artefacto (90 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-bd
+          path: ${{ env.ARCHIVO }}
+          retention-days: 90
