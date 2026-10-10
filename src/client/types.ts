@@ -40,6 +40,7 @@ export interface Patient {
   address: string | null;
   medical_alerts: string | null;
   ficha_observaciones?: string | null;
+  activo?: boolean | null;
   notes: string | null;
   referral_source: string | null;
   created_at: string;

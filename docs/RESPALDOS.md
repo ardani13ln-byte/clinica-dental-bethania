@@ -14,9 +14,9 @@ Tamaño típico actual: ~360 KB el dump completo.
 ## Respaldo manual
 
 ```bash
-export PGPASSWORD='<postgres pooler>'
+export PGPASSWORD='<password del pooler: Supabase → Project Settings → Database>'
 pg_dump "host=aws-0-us-east-1.pooler.supabase.com port=6543 dbname=postgres \
-  user=postgres.ldogupfwtljdslgrxapq sslmode=require" \
+  user=postgres.<ref-del-proyecto> sslmode=require" \
   --format=custom --compress=9 --no-owner --no-privileges \
   --file="respaldo-$(date +%Y%m%d-%H%M%S).dump"
 ```

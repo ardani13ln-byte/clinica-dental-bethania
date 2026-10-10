@@ -1,5 +1,9 @@
 -- Modulo admin en PRODUCCION (extraido 2026-10-10, regenerado).
 -- Orden: funciones -> tablas/politicas -> trigger. Sin lineas psql.
+-- check_function_bodies va primero: las funciones LANGUAGE sql se validan
+-- al crearse y referencian tablas que aun no existen en restores limpios.
+SET check_function_bodies = false;
+-- transaction_timeout es PG17+; quitarla si se restaura en PG16.
 
 CREATE OR REPLACE FUNCTION public.get_user_modules(uid uuid DEFAULT auth.uid())
  RETURNS TABLE(key text, name text, icon text, enabled boolean, sort_order integer)

@@ -66,3 +66,18 @@ CREATE POLICY staff_manage_expedientes ON storage.objects FOR ALL
 
 -- 5. Soft-delete de pacientes: se desactivan, no se borran (cascada contable).
 ALTER TABLE public.patients ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- 6. Anti-escalacion: ni siquiera un admin puede tocar superadmins (el guard
+-- de ultimo-superadmin del cliente no frena llamadas directas a la API).
+CREATE OR REPLACE FUNCTION public.guard_profiles_escalation() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF public.is_superadmin() THEN RETURN NEW; END IF;
+  IF NEW.role = 'superadmin' OR OLD.role = 'superadmin' THEN
+    RAISE EXCEPTION 'Solo un superadmin puede asignar o modificar superadmins';
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS guard_profiles_escalation ON public.profiles;
+CREATE TRIGGER guard_profiles_escalation BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.guard_profiles_escalation();

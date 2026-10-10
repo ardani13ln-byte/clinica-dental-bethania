@@ -400,9 +400,12 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Patients ──
   if (path.startsWith("/api/patients") && !path.startsWith("/api/patients/") && method === "GET") {
-    const q = new URLSearchParams(path.split("?")[1] || "").get("q")?.trim();
-    // Solo activos (soft-delete). Escapa , ( ) que rompen la sintaxis .or().
-    let queryBuilder = supabase.from("patients").select("*").eq("activo", true);
+    const params = new URLSearchParams(path.split("?")[1] || "");
+    const q = params.get("q")?.trim();
+    const verInactivos = params.get("inactivos") === "1";
+    // Solo activos (soft-delete), salvo vista de desactivados.
+    let queryBuilder = supabase.from("patients").select("*");
+    if (!verInactivos) queryBuilder = queryBuilder.eq("activo", true);
     if (q) {
       const like = `%${q.replace(/[%(),]/g, "")}%`;
       queryBuilder = queryBuilder.or(`last_name.ilike.${like},first_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`);
@@ -476,12 +479,8 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     checkError({ error }, "patient update");
     return { patient: data } as T;
   }
-  if (path.startsWith("/api/patients/") && method === "DELETE") {
-    const id = parseInt(path.split("/")[3], 10);
-    const { error } = await supabase.from("patients").delete().eq("id", id);
-    checkError({ error }, "patient delete");
-    return { ok: true } as T;
-  }
+  // DELETE de pacientes eliminado: soft-delete via PUT {activo:false}.
+  // Un trigger en BD tambien bloquea el borrado fisico (cascada contable).
 
   // ── Appointments ──
   if (path.startsWith("/api/appointments") && method === "GET") {

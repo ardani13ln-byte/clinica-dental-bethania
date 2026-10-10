@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../../api";
+import { supabase } from "../../supabase-client";
 import { setSeccionTour } from "../tour/uso-tour";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -20,6 +21,7 @@ const PESTANAS: { value: "users" | "modules" | "logs"; seccion: string; titulo: 
 
 export function AdminPage() {
   const [tab, setTab] = useState<"modules" | "logs" | "users">("users");
+  const [soySuperadmin, setSoySuperadmin] = useState(false);
 
   function cambiarTab(value: "modules" | "logs" | "users") {
     setTab(value);
@@ -29,6 +31,15 @@ export function AdminPage() {
 
   useEffect(() => {
     setSeccionTour("usuarios");
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data } = await supabase.from("profiles").select("role").eq("id", u.user.id).maybeSingle();
+      setSoySuperadmin((data as { role?: string } | null)?.role === "superadmin");
+    })();
   }, []);
 
   return (
@@ -139,7 +150,7 @@ function UsersTab() {
             </div>
             <div className="flex items-center gap-3">
               <select value={p.role} onChange={(e) => updateRole(p.id, e.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm">
-                <option value="superadmin">Super Admin</option>
+                {soySuperadmin && <option value="superadmin">Super Admin</option>}
                 <option value="admin">Administrador</option>
                 <option value="dentist">Dentista</option>
                 <option value="hygienist">Higienista</option>
@@ -198,7 +209,6 @@ function CreateUserForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
           <option value="hygienist">Higienista</option>
           <option value="assistant">Asistente</option>
           <option value="receptionist">Recepcionista</option>
-          <option value="user">Usuario</option>
         </select>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

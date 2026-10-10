@@ -19,6 +19,7 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
   }, []);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [q, setQ] = useState("");
+  const [verInactivos, setVerInactivos] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -28,11 +29,15 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
     const t = setTimeout(async () => {
       try {
         setLoading(true);
+        const params = new URLSearchParams();
+        if (q.trim()) params.set("q", q.trim());
+        if (verInactivos) params.set("inactivos", "1");
+        const qs = params.toString();
         const res = await api<{ patients: Patient[] }>(
           "GET",
-          q.trim() ? `/api/patients?q=${encodeURIComponent(q.trim())}` : "/api/patients",
+          qs ? `/api/patients?${qs}` : "/api/patients",
         );
-        if (!cancelled) setPatients(res.patients);
+        if (!cancelled) setPatients(verInactivos ? res.patients.filter((p) => !(p.activo ?? true)) : res.patients);
       } catch (err) {
         if (!cancelled) app.setError((err as Error).message);
       } finally {
@@ -43,9 +48,19 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [q, app]);
+  }, [q, verInactivos, app]);
 
   const visible = useMemo(() => patients, [patients]);
+
+  async function reactivar(e: React.MouseEvent, id: number) {
+    e.stopPropagation();
+    try {
+      await api("PUT", `/api/patients/${id}`, { activo: true });
+      setPatients((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      app.setError((err as Error).message);
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -64,6 +79,13 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
           <Plus className="h-4 w-4" />
           Nuevo paciente
         </Button>
+        <Button
+          variant={verInactivos ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => setVerInactivos((v) => !v)}
+        >
+          {verInactivos ? "Ver activos" : "Ver desactivados"}
+        </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
@@ -76,6 +98,7 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
                 <TableHead>Email</TableHead>
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Alertas</TableHead>
+                {verInactivos && <TableHead></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +138,13 @@ export function PatientsList({ navigate }: { navigate: (to: string) => void }) {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
+                    {verInactivos && (
+                      <TableCell>
+                        <Button size="sm" variant="outline" onClick={(e) => reactivar(e, p.id)}>
+                          Reactivar
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
