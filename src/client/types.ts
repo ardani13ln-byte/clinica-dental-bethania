@@ -121,6 +121,15 @@ export interface ClinicalNote {
   practitioner_name?: string | null;
 }
 
+export interface FotoTratamiento {
+  id: number;
+  patient_id: number;
+  treatment_plan_item_id: number | null;
+  storage_path: string;
+  descripcion: string | null;
+  created_at: string;
+}
+
 export type ToothCondition =
   | "caries"
   | "restoration"

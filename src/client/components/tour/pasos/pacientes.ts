@@ -9,7 +9,7 @@ const ENCABEZADO: PasoTour = {
 const PESTANAS: PasoTour = {
   selector: '[data-tour="paciente-pestanas"]',
   titulo: "Secciones de la ficha",
-  texto: "Cada pestaña es una parte del expediente: resumen, seguro, carta dental, plan, notas y facturación.",
+  texto: "Cada pestaña es una parte del expediente: resumen, seguro, carta dental, plan, notas, fotos y facturación.",
 };
 
 export const PACIENTES: Record<string, PasoTour[]> = {
@@ -114,6 +114,19 @@ export const PACIENTES: Record<string, PasoTour[]> = {
       selector: '[data-tour="paciente-notas"]',
       titulo: "Historial de notas",
       texto: "Cada nota queda con fecha y autor. Escribe una nueva después de cada atención.",
+    },
+    PESTANAS,
+  ],
+  "paciente:fotos": [
+    {
+      titulo: "Fotos del tratamiento",
+      texto: "Evidencia visual del antes y después.",
+    },
+    ENCABEZADO,
+    {
+      selector: '[data-tour="paciente-fotos"]',
+      titulo: "Galería de fotos",
+      texto: "Sube fotos que se comprimen solas al guardar. Toca una para verla en grande.",
     },
     PESTANAS,
   ],

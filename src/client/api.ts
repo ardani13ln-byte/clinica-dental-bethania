@@ -72,6 +72,13 @@ const NoteSchema = z.object({
   body: str.min(1),
 });
 
+const FotoSchema = z.object({
+  patient_id: z.number().int(),
+  treatment_plan_item_id: optNum,
+  storage_path: str.min(1).max(500),
+  descripcion: optStr,
+});
+
 const ToothConditionSchema = z.object({
   patient_id: z.number().int(),
   tooth: str.min(1).max(5),
@@ -415,6 +422,11 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
       checkError({ error }, "notes");
       return { notes: (data || []).map(flattenNote) } as T;
     }
+    if (parts.length === 5 && parts[4] === "fotos") {
+      const { data, error } = await supabase.from("fotos_tratamiento").select("*").eq("patient_id", id).order("created_at", { ascending: false });
+      checkError({ error }, "fotos");
+      return { fotos: data } as T;
+    }
     if (parts.length === 5 && parts[4] === "tooth-chart") {
       const { data, error } = await supabase.from("tooth_conditions").select("*").eq("patient_id", id).order("tooth").order("surface");
       checkError({ error }, "tooth chart");
@@ -570,6 +582,29 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     const id = parseInt(path.split("/")[3], 10);
     const { error } = await supabase.from("clinical_notes").delete().eq("id", id);
     checkError({ error }, "note delete");
+    return { ok: true } as T;
+  }
+
+  // ── Fotos de tratamientos ──
+  if (path === "/api/fotos-tratamiento" && method === "POST") {
+    const d = validate(FotoSchema, body, "foto");
+    const { data, error } = await supabase.from("fotos_tratamiento").insert({
+      patient_id: d.patient_id,
+      treatment_plan_item_id: d.treatment_plan_item_id ?? null,
+      storage_path: d.storage_path,
+      descripcion: d.descripcion?.trim() || null,
+    }).select("*").single();
+    checkError({ error }, "foto insert");
+    return { foto: data } as T;
+  }
+  if (path.startsWith("/api/fotos-tratamiento/") && method === "DELETE") {
+    const id = parseInt(path.split("/")[3], 10);
+    const { data: row } = await supabase.from("fotos_tratamiento").select("storage_path").eq("id", id).maybeSingle();
+    if (row?.storage_path) {
+      await supabase.storage.from("expedientes").remove([row.storage_path as string]);
+    }
+    const { error } = await supabase.from("fotos_tratamiento").delete().eq("id", id);
+    checkError({ error }, "foto delete");
     return { ok: true } as T;
   }
 
