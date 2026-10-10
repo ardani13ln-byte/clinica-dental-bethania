@@ -59,7 +59,7 @@ export function AdminPage() {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        {tab === "users" && <UsersTab />}
+        {tab === "users" && <UsersTab soySuperadmin={soySuperadmin} />}
         {tab === "modules" && <ModulesTab />}
         {tab === "logs" && <LogsTab />}
       </div>
@@ -86,7 +86,7 @@ function ErrorBox({ error, onRetry }: { error: string; onRetry: () => void }) {
 }
 
 // ── USUARIOS (con crear + modulos por usuario) ──
-function UsersTab() {
+function UsersTab({ soySuperadmin }: { soySuperadmin: boolean }) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
