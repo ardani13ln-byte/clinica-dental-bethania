@@ -17,6 +17,7 @@ const PatientSchema = z.object({
   medical_alerts: optStr,
   notes: optStr,
   referral_source: optStr,
+  ficha_observaciones: optStr,
 });
 
 const AppointmentSchema = z.object({

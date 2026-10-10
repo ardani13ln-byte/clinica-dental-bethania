@@ -14,6 +14,7 @@ import { ToothChart } from "./tooth-chart";
 import { TreatmentPlan } from "./treatment-plan";
 import { ClinicalNotes } from "./clinical-notes";
 import { FotosPaciente } from "./fotos-paciente";
+import { FichaPaciente } from "./ficha-paciente";
 import { Billing } from "./billing";
 import { InsuranceTab } from "./insurance-tab";
 import { PatientDialog } from "./patient-dialog";
@@ -27,6 +28,7 @@ const PESTANAS: { value: string; seccion: string; titulo: string }[] = [
   { value: "overview", seccion: "resumen", titulo: "Resumen" },
   { value: "insurance", seccion: "seguro", titulo: "Seguro" },
   { value: "chart", seccion: "carta", titulo: "Carta dental" },
+  { value: "ficha", seccion: "ficha", titulo: "Ficha" },
   { value: "plan", seccion: "plan", titulo: "Plan de tratamiento" },
   { value: "notes", seccion: "notas", titulo: "Notas clínicas" },
   { value: "fotos", seccion: "fotos", titulo: "Fotos" },
@@ -152,6 +154,9 @@ export function PatientPage({ id, navigate }: Props) {
           </TabsContent>
           <TabsContent value="chart" className="mt-4">
             <ToothChart patientId={patient.id} />
+          </TabsContent>
+          <TabsContent value="ficha" className="mt-4">
+            <FichaPaciente patientId={patient.id} />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <TreatmentPlan patientId={patient.id} />

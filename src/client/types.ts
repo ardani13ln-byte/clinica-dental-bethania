@@ -39,6 +39,7 @@ export interface Patient {
   phone: string | null;
   address: string | null;
   medical_alerts: string | null;
+  ficha_observaciones?: string | null;
   notes: string | null;
   referral_source: string | null;
   created_at: string;
