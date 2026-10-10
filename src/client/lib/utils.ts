@@ -48,11 +48,17 @@ export function toIsoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Build a local-time ISO datetime 'YYYY-MM-DDTHH:MM:00' for a given date + minutes-from-midnight. */
+/** Build a Guatemala-time ISO datetime with offset for a date + minutes-from-midnight. */
 export function localDateTime(date: string, minutesFromMidnight: number): string {
   const h = Math.floor(minutesFromMidnight / 60);
   const m = minutesFromMidnight % 60;
-  return `${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+  return `${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00-06:00`;
+}
+
+/** Bounds [ini, fin) in UTC ISO for a Guatemala calendar day 'YYYY-MM-DD'. */
+export function gtDayBounds(fecha: string): { ini: string; fin: string } {
+  const ini = new Date(`${fecha}T06:00:00Z`);
+  return { ini: ini.toISOString(), fin: new Date(ini.getTime() + 86400000).toISOString() };
 }
 
 /** Minutes-from-midnight of a local datetime ISO string. */

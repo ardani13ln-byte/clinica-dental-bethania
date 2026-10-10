@@ -66,18 +66,20 @@ export default async function handler(req, res) {
 
     const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-  // Ventana de "manana" en America/Guatemala (las citas se guardan en hora local).
+  // Ventana de "manana" en America/Guatemala (columna timestamptz: limites UTC explicitos).
   const [y, m, dd] = hoyGT().split("-").map(Number);
   const base = new Date(Date.UTC(y, m - 1, dd, 12)); // mediodia UTC: fecha segura
   const f = (d) => d.toISOString().slice(0, 10);
   const mananaGT = f(new Date(base.getTime() + 86400000));
   const pasadaGT = f(new Date(base.getTime() + 2 * 86400000));
+  const iniUTC = new Date(base.getTime() + 86400000 - 6 * 3600 * 1000).toISOString();
+  const finUTC = new Date(base.getTime() + 2 * 86400000 - 6 * 3600 * 1000).toISOString();
 
   const { data: appointments, error } = await supabase
     .from("appointments")
     .select("id, start_time, end_time, status, kind, patient_id, treatment_type_id")
-    .gte("start_time", mananaGT)
-    .lt("start_time", pasadaGT)
+    .gte("start_time", iniUTC)
+    .lt("start_time", finUTC)
     .eq("kind", "patient")
     .neq("status", "cancelled");
 

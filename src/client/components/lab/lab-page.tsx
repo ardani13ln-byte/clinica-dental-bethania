@@ -56,8 +56,8 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
   }, [statusFilter]);
 
   const overdueCount = useMemo(() => {
-    const now = new Date().toISOString();
-    return cases.filter((c) => c.due_at && c.due_at < now && !c.received_at && c.status !== "cancelled").length;
+    const now = Date.now();
+    return cases.filter((c) => c.due_at && new Date(c.due_at).getTime() < now && !c.received_at && c.status !== "cancelled").length;
   }, [cases]);
 
   async function setStatus(id: number, status: LabStatus) {
@@ -138,7 +138,7 @@ export function LabPage({ navigate }: { navigate: (to: string) => void }) {
                 </thead>
                 <tbody>
                   {cases.map((c) => {
-                    const overdue = c.due_at && c.due_at < new Date().toISOString() && !c.received_at && c.status !== "cancelled";
+                    const overdue = c.due_at && new Date(c.due_at).getTime() < Date.now() && !c.received_at && c.status !== "cancelled";
                     return (
                       <tr key={c.id} className="border-b last:border-0">
                         <td className="px-3 py-2">
@@ -301,7 +301,7 @@ function LabCaseDialog({
         shade: shade.trim() || null,
         fee: parseFloat(fee) || 0,
         sent_at: sentAt ? `${sentAt}T00:00:00` : null,
-        due_at: dueAt ? `${dueAt}T00:00:00` : null,
+        due_at: dueAt ? `${dueAt}T00:00:00-06:00` : null,
         notes: notes.trim() || null,
       };
       const res = caseRow

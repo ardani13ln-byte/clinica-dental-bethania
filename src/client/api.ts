@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-client";
-import { toIsoDate } from "./lib/utils";
+import { toIsoDate, gtDayBounds } from "./lib/utils";
 import { z } from "zod";
 
 // ── Zod Schemas ───────────────────────────────────────────────────
@@ -200,8 +200,12 @@ function validate<T>(schema: z.ZodSchema<T>, data: unknown, label: string): T {
 
 function checkError(result: { error: unknown | null }, label: string) {
   if (result.error) {
-    const e = result.error as { message?: string };
-    throw new Error(e.message || label);
+    const e = result.error as { message?: string; code?: string };
+    const msg = e.message || "";
+    if (msg.includes("no_traslape_consultorio")) {
+      throw new Error("Ese horario ya está ocupado en este consultorio.");
+    }
+    throw new Error(msg || label);
   }
 }
 
@@ -296,7 +300,7 @@ const TOMAKE_SELECT = "*, patients(first_name,last_name,date_of_birth), treatmen
 const LAB_SELECT = "*, patients(first_name,last_name), practitioners(name), treatment_types(code,name)";
 
 function nowStr() {
-  return new Date().toISOString().slice(0, 19).replace("T", " ");
+  return new Date().toISOString();
 }
 
 // ── Main router ───────────────────────────────────────────────────
@@ -494,9 +498,9 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     if (patientId) {
       queryBuilder = queryBuilder.eq("patient_id", parseInt(patientId, 10)).order("start_time", { ascending: false }).limit(200);
     } else if (date) {
-      const dayStart = `${date}T00:00:00`;
-      const dayEnd = `${date}T23:59:59`;
-      queryBuilder = queryBuilder.lt("start_time", dayEnd).gt("end_time", dayStart).order("start_time");
+      // Dia GT como rango UTC explicito (las citas guardan instante con offset).
+      const bounds = gtDayBounds(date);
+      queryBuilder = queryBuilder.lt("start_time", bounds.fin).gt("end_time", bounds.ini).order("start_time");
     } else {
       queryBuilder = queryBuilder.order("start_time", { ascending: false }).limit(200);
     }
@@ -825,17 +829,18 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
       return toIsoDate(d);
     })();
 
+    const boundsHoy = gtDayBounds(today);
     const [todayR, weekR, monthR, completedR, noShowR, cancelledR, byTreatR, bySourceR, prodR, paidR, labR, waitR] = await Promise.all([
-      supabase.from("appointments").select("*", { count: "exact", head: true }).filter("start_time", "like", `${today}%`).eq("kind", "patient"),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", startOfWeek).eq("kind", "patient"),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", startOfMonth).eq("kind", "patient"),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", startOfMonth).eq("status", "completed"),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", startOfMonth).eq("status", "no_show"),
-      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", startOfMonth).eq("status", "cancelled"),
-      supabase.from("appointments").select("treatment_type_id, treatment_types(name, default_fee)").gte("start_time", startOfMonth).eq("kind", "patient"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", boundsHoy.ini).lt("start_time", boundsHoy.fin).eq("kind", "patient"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", `${startOfWeek}T06:00:00Z`).eq("kind", "patient"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", `${startOfMonth}T06:00:00Z`).eq("kind", "patient"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", `${startOfMonth}T06:00:00Z`).eq("status", "completed"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", `${startOfMonth}T06:00:00Z`).eq("status", "no_show"),
+      supabase.from("appointments").select("*", { count: "exact", head: true }).gte("start_time", `${startOfMonth}T06:00:00Z`).eq("status", "cancelled"),
+      supabase.from("appointments").select("treatment_type_id, treatment_types(name, default_fee)").gte("start_time", `${startOfMonth}T06:00:00Z`).eq("kind", "patient"),
       supabase.from("patients").select("referral_source"),
-      supabase.from("invoices").select("total").gte("issued_at", startOfMonth).neq("status", "void"),
-      supabase.from("invoices").select("amount_paid").gte("issued_at", startOfMonth).neq("status", "void"),
+      supabase.from("invoices").select("total").gte("issued_at", `${startOfMonth}T06:00:00Z`).neq("status", "void"),
+      supabase.from("invoices").select("amount_paid").gte("issued_at", `${startOfMonth}T06:00:00Z`).neq("status", "void"),
       supabase.from("lab_cases").select("*", { count: "exact", head: true }).lt("due_at", nowStr()).is("received_at", null).not("status", "in", '("cancelled","received","seated")'),
       supabase.from("waiting_list").select("*", { count: "exact", head: true }),
     ]);
