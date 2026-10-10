@@ -145,7 +145,6 @@ function UsersTab() {
                 <option value="hygienist">Higienista</option>
                 <option value="assistant">Asistente</option>
                 <option value="receptionist">Recepcionista</option>
-                <option value="user">Usuario</option>
               </select>
               <button onClick={() => setExpanded(expanded === p.id ? null : p.id)} className="rounded-md border p-2 hover:bg-muted">
                 {expanded === p.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

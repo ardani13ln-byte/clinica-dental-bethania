@@ -1,11 +1,96 @@
--- Objetos del modulo admin en PRODUCCION (extraido 2026-10-10).
--- Fuente de verdad para restaurar: este archivo + supabase-schema.sql + supabase-rls-fix.sql.
+-- Modulo admin en PRODUCCION (extraido 2026-10-10, regenerado).
+-- Orden: funciones -> tablas/politicas -> trigger. Sin lineas psql.
+
+CREATE OR REPLACE FUNCTION public.get_user_modules(uid uuid DEFAULT auth.uid())
+ RETURNS TABLE(key text, name text, icon text, enabled boolean, sort_order integer)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET row_security TO 'off'
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'No autenticado';
+  END IF;
+  IF uid IS DISTINCT FROM auth.uid() THEN
+    PERFORM 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'superadmin') AND COALESCE(active, true);
+    IF NOT FOUND THEN
+      uid := auth.uid();
+    END IF;
+  END IF;
+  RETURN QUERY
+    SELECT m.key, m.name, m.icon,
+      COALESCE(um.enabled, true) AS enabled,
+      m.sort_order
+    FROM public.modules m
+    LEFT JOIN public.user_modules um ON um.module_key = m.key AND um.user_id = uid
+    ORDER BY m.sort_order;
+END;
+$function$
+;
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET row_security TO 'off'
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  INSERT INTO public.profiles (id, email, role, active)
+  VALUES (NEW.id, NEW.email, 'user', false);
+  RETURN NEW;
+END;
+$function$
+;
+CREATE OR REPLACE FUNCTION public.is_active_staff(uid uuid DEFAULT auth.uid())
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET row_security TO 'off'
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = uid AND COALESCE(active, false) AND role <> 'user'
+  );
+$function$
+;
+CREATE OR REPLACE FUNCTION public.is_admin_or_above(uid uuid DEFAULT auth.uid())
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET row_security TO 'off'
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = uid AND COALESCE(active, false) AND role IN ('admin', 'superadmin')
+  );
+$function$
+;
+CREATE OR REPLACE FUNCTION public.is_superadmin(uid uuid DEFAULT auth.uid())
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET row_security TO 'off'
+ SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = uid AND role = 'superadmin' AND active = true
+  );
+$function$
+;
+
+-- Dispara perfil inactivo al registrarse (un superadmin lo activa y asigna rol).
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict 8GCehDT0dZyLp4ucLm6XkdxZmjcSNGyaoegGlYVSb7ReicOuWlpC5t1xed8cNBe
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)
@@ -243,21 +328,21 @@ ALTER TABLE ONLY public.user_modules
 -- Name: system_logs logs_delete; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY logs_delete ON public.system_logs FOR DELETE TO authenticated USING (public.is_superadmin());
+CREATE POLICY logs_delete ON public.system_logs FOR DELETE TO authenticated USING (public.is_admin_or_above());
 
 
 --
 -- Name: system_logs logs_insert; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY logs_insert ON public.system_logs FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY logs_insert ON public.system_logs FOR INSERT TO authenticated WITH CHECK (public.is_admin_or_above());
 
 
 --
 -- Name: system_logs logs_read; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY logs_read ON public.system_logs FOR SELECT TO authenticated USING (public.is_superadmin());
+CREATE POLICY logs_read ON public.system_logs FOR SELECT TO authenticated USING (public.is_admin_or_above());
 
 
 --
@@ -277,7 +362,7 @@ CREATE POLICY modules_read ON public.modules FOR SELECT TO authenticated USING (
 -- Name: modules modules_write; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY modules_write ON public.modules TO authenticated USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+CREATE POLICY modules_write ON public.modules TO authenticated USING (public.is_admin_or_above()) WITH CHECK (public.is_admin_or_above());
 
 
 --
@@ -297,7 +382,7 @@ CREATE POLICY profiles_read ON public.profiles FOR SELECT TO authenticated USING
 -- Name: profiles profiles_write; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY profiles_write ON public.profiles TO authenticated USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+CREATE POLICY profiles_write ON public.profiles TO authenticated USING (public.is_admin_or_above()) WITH CHECK (public.is_admin_or_above());
 
 
 --
@@ -323,38 +408,11 @@ CREATE POLICY user_modules_read ON public.user_modules FOR SELECT TO authenticat
 -- Name: user_modules user_modules_write; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY user_modules_write ON public.user_modules TO authenticated USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+CREATE POLICY user_modules_write ON public.user_modules TO authenticated USING (public.is_admin_or_above()) WITH CHECK (public.is_admin_or_above());
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8GCehDT0dZyLp4ucLm6XkdxZmjcSNGyaoegGlYVSb7ReicOuWlpC5t1xed8cNBe
 
-
-
--- Funciones SECURITY DEFINER (row_security off para evitar recursion en policies)
-CREATE OR REPLACE FUNCTION public.is_superadmin(uid uuid DEFAULT auth.uid())
-RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET row_security TO 'off' SET search_path = public AS $function$
-  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = uid AND role = 'superadmin' AND active = true);
-$function$;
-
-CREATE OR REPLACE FUNCTION public.get_user_modules(uid uuid DEFAULT auth.uid())
-RETURNS TABLE(key text, name text, icon text, enabled boolean, sort_order integer)
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET row_security TO 'off' SET search_path = public AS $function$
-BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'No autenticado'; END IF;
-  IF uid IS DISTINCT FROM auth.uid() THEN
-    PERFORM 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin') AND COALESCE(active, true);
-    IF NOT FOUND THEN uid := auth.uid(); END IF;
-  END IF;
-  RETURN QUERY SELECT m.key, m.name, m.icon, COALESCE(um.enabled, true), m.sort_order
-    FROM public.modules m LEFT JOIN public.user_modules um ON um.module_key = m.key AND um.user_id = uid ORDER BY m.sort_order;
-END;
-$function$;
-
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET row_security TO 'off' SET search_path = public AS $function$
-BEGIN INSERT INTO profiles (id, email, role) VALUES (NEW.id, NEW.email, 'user'); RETURN NEW; END;
-$function$;

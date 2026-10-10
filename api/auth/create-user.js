@@ -12,6 +12,14 @@ export default async function handler(req, res) {
 
   const { email, password, full_name, role } = req.body;
 
+  // Roles asignables (cerrado): 'user' queda fuera porque ya no es staff.
+  const ROLES = ["admin", "dentist", "hygienist", "assistant", "receptionist", "superadmin"];
+  const finalRole = role || "receptionist";
+  if (!ROLES.includes(finalRole)) {
+    res.status(400).json({ error: "Rol inválido" });
+    return;
+  }
+
   // Verificar que quien llama es superadmin
   const token = (req.headers.cookie || "").split("; ").find(c => c.startsWith("sb-access-token="))?.split("=")[1];
   if (!token) {
@@ -41,11 +49,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Crear profile
+  // Crear profile (activo: el trigger lo crea inactivo; la creacion por
+  // superadmin activa de una vez)
   await supabase.from("profiles").upsert({
     id: data.user.id,
     email,
-    role: role || "user",
+    role: finalRole,
     full_name: full_name || null,
     active: true,
   });
@@ -62,9 +71,9 @@ export default async function handler(req, res) {
   await supabase.from("system_logs").insert({
     level: "info",
     category: "auth",
-    message: `Usuario creado: ${email} (rol: ${role || "user"})`,
+    message: `Usuario creado: ${email} (rol: ${finalRole})`,
     user_email: email,
   });
 
-  res.status(200).json({ user: { id: data.user.id, email, role: role || "user", full_name: full_name || null, active: true } });
+  res.status(200).json({ user: { id: data.user.id, email, role: finalRole, full_name: full_name || null, active: true } });
 }

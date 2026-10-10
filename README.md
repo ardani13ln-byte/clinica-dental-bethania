@@ -42,13 +42,15 @@ producción la sirven las funciones de `api/`.
 Orden de aplicación para una BD desde cero:
 
 1. `supabase-schema.sql` — tablas clínicas + RLS base
-2. `supabase-admin.sql` — módulos, perfiles, bitácora, funciones `is_superadmin`,
-   `is_active_staff`, `get_user_modules` (extraído de producción)
-3. `supabase-rls-fix.sql` — políticas auth-only + triggers de columnas
-4. `supabase-rls-roles.sql` — RLS por personal activo + bitácora restringida
-5. `supabase-contabilidad.sql` — facturas solo anulables, nunca borrables
-6. `supabase-fotos.sql` — tabla + bucket privado `expedientes`
-7. `supabase-ficha.sql` — columna `ficha_observaciones`
+2. `supabase-admin.sql` — funciones, módulos, perfiles, bitácora, trigger
+   de auto-perfil (extraído de producción; incluye políticas vigentes)
+3. `supabase-rls-fix.sql` — triggers de columnas server-managed
+4. `supabase-fotos.sql` — tabla + bucket privado `expedientes`
+5. `supabase-ficha.sql` — columna `ficha_observaciones`
+6. `supabase-rls-roles.sql` — RLS por personal activo + bitácora restringida
+7. `supabase-seguridad-2.sql` — rol `user` sin acceso, altas inactivas,
+   admin administra, fotos solo staff, `activo` en pacientes
+8. `supabase-contabilidad.sql` — facturas solo anulables, nunca borrables
 
 Ver `docs/RESPALDOS.md` para el procedimiento de respaldos y restauración.
 

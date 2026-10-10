@@ -10,18 +10,24 @@ function formatPhone(phone) {
   return digits;
 }
 
-function partesGT(fecha) {
-  const partes = new Intl.DateTimeFormat("es-GT", {
-    timeZone: "America/Guatemala",
-    weekday: "long", day: "numeric", month: "long",
-    hour: "2-digit", minute: "2-digit", hour12: true,
-  }).formatToParts(fecha);
-  const get = (t) => (partes.find((p) => p.type === t)?.value || "");
-  return { dia: get("weekday"), fecha: get("day"), mes: get("month"), hora: `${get("hour")}:${get("minute")} ${get("dayPeriod")}` };
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+// Las citas se guardan como texto en hora local GT sin zona ("2026-10-11T09:00:00").
+// Formatear directo del texto: new Date() en servidor UTC desplazaria 6 horas.
+function partesGT(iso) {
+  const m = String(iso).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, y, mo, d, hh, mm] = m.map(Number);
+  const dia = DIAS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  const h12 = hh % 12 || 12;
+  const ampm = hh < 12 ? "a. m." : "p. m.";
+  return { dia, fecha: d, mes: MESES[mo - 1], hora: `${h12}:${String(mm).padStart(2, "0")} ${ampm}` };
 }
 
 function formatDate(startTime) {
-  const p = partesGT(new Date(startTime));
+  const p = partesGT(startTime);
+  if (!p) return String(startTime);
   return `${p.dia} ${p.fecha} de ${p.mes} a las ${p.hora}`;
 }
 

@@ -21,7 +21,8 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('expedientes', 'expedientes', false)
 ON CONFLICT (id) DO NOTHING;
 
-DROP POLICY IF EXISTS "auth_manage_expedientes" ON storage.objects;
-CREATE POLICY "auth_manage_expedientes" ON storage.objects FOR ALL
-  USING (bucket_id = 'expedientes' AND auth.uid() IS NOT NULL)
-  WITH CHECK (bucket_id = 'expedientes' AND auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS auth_manage_expedientes ON storage.objects;
+DROP POLICY IF EXISTS staff_manage_expedientes ON storage.objects;
+CREATE POLICY staff_manage_expedientes ON storage.objects FOR ALL
+  USING (bucket_id = 'expedientes' AND public.is_active_staff())
+  WITH CHECK (bucket_id = 'expedientes' AND public.is_active_staff());

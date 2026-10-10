@@ -19,6 +19,7 @@ const PatientSchema = z.object({
   notes: optStr,
   referral_source: optStr,
   ficha_observaciones: optStr,
+  activo: z.boolean().optional(),
 });
 
 const AppointmentSchema = z.object({
@@ -400,10 +401,11 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   // ── Patients ──
   if (path.startsWith("/api/patients") && !path.startsWith("/api/patients/") && method === "GET") {
     const q = new URLSearchParams(path.split("?")[1] || "").get("q")?.trim();
-    let queryBuilder = supabase.from("patients").select("*");
+    // Solo activos (soft-delete). Escapa , ( ) que rompen la sintaxis .or().
+    let queryBuilder = supabase.from("patients").select("*").eq("activo", true);
     if (q) {
-      const like = `%${q}%`;
-      queryBuilder = queryBuilder.or(`last_name.like.${like},first_name.like.${like},email.like.${like},phone.like.${like}`);
+      const like = `%${q.replace(/[%(),]/g, "")}%`;
+      queryBuilder = queryBuilder.or(`last_name.ilike.${like},first_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`);
     }
     const { data, error } = await queryBuilder.order("last_name").order("first_name").limit(q ? 200 : 500);
     checkError({ error }, "patients");
@@ -869,7 +871,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
     // Aged receivables
     const now = Date.now();
     const dayMs = 86400000;
-    const allInvoices = await supabase.from("invoices").select("total, amount_paid, issued_at").eq("status", "open");
+    const allInvoices = await supabase.from("invoices").select("total, amount_paid, issued_at").in("status", ["open", "partial"]);
     let aged0_30 = 0, aged31_60 = 0, aged61_90 = 0, aged90 = 0;
     for (const inv of (allInvoices.data || [])) {
       const r = inv as Record<string, unknown>;

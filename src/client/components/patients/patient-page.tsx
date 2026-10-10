@@ -72,9 +72,9 @@ export function PatientPage({ id, navigate }: Props) {
 
   async function deletePatient() {
     if (!patient) return;
-    if (!confirm(`¿Eliminar a ${patient.first_name} ${patient.last_name}? Esto borra todos sus registros.`)) return;
+    if (!confirm(`¿Desactivar a ${patient.first_name} ${patient.last_name}? Su historial se conserva pero ya no aparecerá en listas ni agenda.`)) return;
     try {
-      await api("DELETE", `/api/patients/${patient.id}`);
+      await api("PUT", `/api/patients/${patient.id}`, { activo: false });
       navigate("/patients");
     } catch (err) {
       app.setError((err as Error).message);
@@ -134,7 +134,7 @@ export function PatientPage({ id, navigate }: Props) {
           </Button>
           <Button variant="ghost" size="sm" onClick={deletePatient} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
             <Trash2 className="h-4 w-4" />
-            Eliminar
+            Desactivar
           </Button>
         </div>
       </div>
