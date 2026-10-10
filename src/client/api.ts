@@ -896,6 +896,46 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
       waiting_list_count: waitR.count ?? 0,
     } as T;
   }
+  if (path === "/api/reports/plan-acceptance" && method === "GET") {
+    const { data, error } = await supabase
+      .from("treatment_plan_items")
+      .select("status, fee, treatment_type_id, treatment_types(name)");
+    checkError({ error }, "plan acceptance");
+    const rows = (data || []) as Record<string, unknown>[];
+    const porEstado: Record<string, number> = { planned: 0, accepted: 0, completed: 0, declined: 0 };
+    let montoAceptado = 0, montoTotal = 0;
+    const porTratamiento = new Map<string, { name: string; total: number; aceptados: number; monto: number }>();
+    for (const r of rows) {
+      const st = String(r.status || "planned");
+      if (st in porEstado) porEstado[st]++;
+      else porEstado.planned++;
+      const fee = (r.fee as number) || 0;
+      montoTotal += fee;
+      const tt = r.treatment_types as Record<string, unknown> | null;
+      const name = (tt?.name as string) || "Sin tratamiento";
+      const e = porTratamiento.get(name) || { name, total: 0, aceptados: 0, monto: 0 };
+      e.total++;
+      e.monto += fee;
+      if (st === "accepted" || st === "completed") {
+        e.aceptados++;
+        montoAceptado += fee;
+      }
+      porTratamiento.set(name, e);
+    }
+    const aceptados = porEstado.accepted + porEstado.completed;
+    const total = rows.length;
+    return {
+      total,
+      por_estado: porEstado,
+      tasa: total ? Math.round((aceptados / total) * 100) : 0,
+      monto_total: montoTotal,
+      monto_aceptado: montoAceptado,
+      por_tratamiento: Array.from(porTratamiento.values())
+        .map((t) => ({ ...t, tasa: t.total ? Math.round((t.aceptados / t.total) * 100) : 0 }))
+        .sort((a, b) => b.monto - a.monto)
+        .slice(0, 8),
+    } as T;
+  }
 
   // ── Settings ──
   if (path === "/api/settings" && method === "GET") {

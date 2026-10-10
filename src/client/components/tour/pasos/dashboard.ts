@@ -17,9 +17,19 @@ export const DASHBOARD: Record<string, PasoTour[]> = {
       texto: "La agenda del día ordenada por hora, con paciente, tratamiento y estado. Toca una cita para ir a la Agenda.",
     },
     {
+      selector: '[data-tour="dashboard-recordatorios"]',
+      titulo: "Recordatorios para mañana",
+      texto: "Las citas de mañana con botón de WhatsApp cada una. Tócalo y el chat abre con el mensaje listo, sin costo.",
+    },
+    {
       selector: '[data-tour="dashboard-alertas"]',
       titulo: "Requiere atención",
       texto: "Pendientes que no debes dejar pasar: lista de espera, casos de laboratorio vencidos e inasistencias del mes.",
+    },
+    {
+      selector: '[data-tour="dashboard-aceptacion"]',
+      titulo: "Aceptación de planes",
+      texto: "Qué porcentaje de tratamientos propuestos aceptan los pacientes, y cuáles se rechazan más.",
     },
     {
       selector: '[data-tour="dashboard-resultados"]',
@@ -30,11 +40,6 @@ export const DASHBOARD: Record<string, PasoTour[]> = {
       selector: '[data-tour="dashboard-cartera"]',
       titulo: "Cuentas por cobrar",
       texto: "Saldos pendientes de los pacientes agrupados por antigüedad. Los de 90+ días necesitan seguimiento.",
-    },
-    {
-      selector: '[data-tour="dashboard-desglose"]',
-      titulo: "Tratamientos y origen",
-      texto: "Los tratamientos más realizados y de dónde vienen los pacientes. Ayuda a decidir qué promocionar.",
     },
   ],
 };

@@ -1,19 +1,31 @@
 import { useEffect, useState } from "react";
 import {
-  CalendarDays, CalendarRange, TrendingUp, Wallet, AlertTriangle, FlaskConical, Users, ListChecks, Clock,
+  CalendarDays, CalendarRange, TrendingUp, Wallet, AlertTriangle, FlaskConical, Users, ListChecks, Clock, MessageCircle,
 } from "lucide-react";
 import { api } from "@/api";
 import { useApp } from "@/context";
 import { setSeccionTour } from "@/components/tour/uso-tour";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ReportsSummary, Appointment } from "@/types";
 
+interface Aceptacion {
+  total: number;
+  por_estado: Record<string, number>;
+  tasa: number;
+  monto_total: number;
+  monto_aceptado: number;
+  por_tratamiento: { name: string; total: number; aceptados: number; monto: number; tasa: number }[];
+}
+
 export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
   const app = useApp();
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
+  const [mananaAppts, setMananaAppts] = useState<Appointment[]>([]);
+  const [aceptacion, setAceptacion] = useState<Aceptacion | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,11 +37,18 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
       try {
         setLoading(true);
         const today = new Date().toISOString().slice(0, 10);
-        const [res, apptRes] = await Promise.all([
+        const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+        const [res, apptRes, mananaRes, acepRes] = await Promise.all([
           api<ReportsSummary>("GET", "/api/reports/summary"),
           api<{ appointments: Appointment[] }>("GET", `/api/appointments?date=${today}`),
+          api<{ appointments: Appointment[] }>("GET", `/api/appointments?date=${manana}`),
+          api<Aceptacion>("GET", "/api/reports/plan-acceptance"),
         ]);
         setData(res);
+        setAceptacion(acepRes);
+        setMananaAppts((mananaRes.appointments || []).filter(
+          (a) => a.kind === "patient" && a.status !== "cancelled" && a.patient_id,
+        ).sort((a, b) => a.start_time.localeCompare(b.start_time)));
         setTodayAppts((apptRes.appointments || []).filter(
           (a) => a.kind === "patient" && a.status !== "cancelled",
         ).sort((a, b) => a.start_time.localeCompare(b.start_time)));
@@ -120,6 +139,83 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
               <Alert icon={ListChecks} label="En lista de espera" value={data.waiting_list_count} tone={data.waiting_list_count > 0 ? "sky" : "slate"} />
               <Alert icon={FlaskConical} label="Lab vencidos" value={data.overdue_lab_cases} tone={data.overdue_lab_cases > 0 ? "rose" : "slate"} />
               <Alert icon={AlertTriangle} label="Inasistencias (mes)" value={data.month_no_shows} tone={data.month_no_shows > 0 ? "amber" : "slate"} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recordatorios mañana + Aceptación de planes */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2" data-tour="dashboard-recordatorios">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageCircle className="h-4 w-4" />
+                Recordatorios para mañana
+                <span className="ml-auto text-xs font-normal tabular-nums text-muted-foreground">
+                  {mananaAppts.length} por enviar · sin costo
+                </span>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Toca WhatsApp en cada cita: abre el chat con el mensaje listo para enviar.</p>
+            </CardHeader>
+            <CardContent>
+              {mananaAppts.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No hay citas mañana. Nada que recordar.</p>
+              ) : (
+                <div className="space-y-2">
+                  {mananaAppts.map((a) => {
+                    const nombre = [a.patient_first_name, a.patient_last_name].filter(Boolean).join(" ") || "—";
+                    return (
+                      <div key={a.id} className="flex w-full items-center gap-3 rounded-md border px-3 py-2">
+                        <span className="w-16 shrink-0 text-sm font-medium tabular-nums">
+                          {new Date(a.start_time).toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                        </span>
+                        <span className="flex-1 truncate text-sm font-medium">{nombre}</span>
+                        <span className="hidden text-xs text-muted-foreground sm:inline">{a.treatment_name ?? ""}</span>
+                        {a.patient_phone ? (
+                          <a
+                            href={buildWhatsAppUrl(a.patient_phone, a.start_time, nombre, a.treatment_name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950/40"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            WhatsApp
+                          </a>
+                        ) : (
+                          <span className="shrink-0 text-xs text-muted-foreground">Sin teléfono</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-tour="dashboard-aceptacion">
+            <CardHeader>
+              <CardTitle className="text-base">Aceptación de planes</CardTitle>
+              <p className="text-xs text-muted-foreground">Aceptados + realizados sobre propuestos</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!aceptacion || aceptacion.total === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">Aún no hay planes propuestos.</p>
+              ) : (
+                <>
+                  <div className="text-3xl font-bold tabular-nums">{aceptacion.tasa}%</div>
+                  <Bar label="Aceptado" count={aceptacion.por_estado.accepted || 0} total={aceptacion.total} pct={Math.round(((aceptacion.por_estado.accepted || 0) / aceptacion.total) * 100)} tone="emerald" />
+                  <Bar label="Realizado" count={aceptacion.por_estado.completed || 0} total={aceptacion.total} pct={Math.round(((aceptacion.por_estado.completed || 0) / aceptacion.total) * 100)} tone="sky" />
+                  <Bar label="Rechazado" count={aceptacion.por_estado.declined || 0} total={aceptacion.total} pct={Math.round(((aceptacion.por_estado.declined || 0) / aceptacion.total) * 100)} tone="rose" />
+                  <p className="text-xs tabular-nums text-muted-foreground">
+                    Q{aceptacion.monto_aceptado.toFixed(0)} aceptados de Q{aceptacion.monto_total.toFixed(0)} propuestos
+                  </p>
+                  {aceptacion.por_tratamiento.slice(0, 4).map((t) => (
+                    <div key={t.name} className="flex items-baseline justify-between gap-2 text-xs">
+                      <span className="truncate font-medium">{t.name}</span>
+                      <span className="shrink-0 tabular-nums text-muted-foreground">{t.tasa}% ({t.aceptados}/{t.total})</span>
+                    </div>
+                  ))}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
