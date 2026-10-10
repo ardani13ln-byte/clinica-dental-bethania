@@ -10,15 +10,28 @@ function formatPhone(phone) {
   return digits;
 }
 
+function partesGT(fecha) {
+  const partes = new Intl.DateTimeFormat("es-GT", {
+    timeZone: "America/Guatemala",
+    weekday: "long", day: "numeric", month: "long",
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  }).formatToParts(fecha);
+  const get = (t) => (partes.find((p) => p.type === t)?.value || "");
+  return { dia: get("weekday"), fecha: get("day"), mes: get("month"), hora: `${get("hour")}:${get("minute")} ${get("dayPeriod")}` };
+}
+
 function formatDate(startTime) {
-  const d = new Date(startTime);
-  const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-  const day = days[d.getDay()];
-  const date = d.getDate();
-  const month = months[d.getMonth()];
-  const time = d.toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit", hour12: true });
-  return `${day} ${date} de ${month} a las ${time}`;
+  const p = partesGT(new Date(startTime));
+  return `${p.dia} ${p.fecha} de ${p.mes} a las ${p.hora}`;
+}
+
+// Fecha YYYY-MM-DD en America/Guatemala.
+function hoyGT() {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Guatemala", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (t) => partes.find((p) => p.type === t).value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 export default async function handler(req, res) {
@@ -47,19 +60,18 @@ export default async function handler(req, res) {
 
     const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-
-  const dayAfter = new Date(tomorrow);
-  dayAfter.setDate(dayAfter.getDate() + 1);
+  // Ventana de "manana" en America/Guatemala (las citas se guardan en hora local).
+  const [y, m, dd] = hoyGT().split("-").map(Number);
+  const base = new Date(Date.UTC(y, m - 1, dd, 12)); // mediodia UTC: fecha segura
+  const f = (d) => d.toISOString().slice(0, 10);
+  const mananaGT = f(new Date(base.getTime() + 86400000));
+  const pasadaGT = f(new Date(base.getTime() + 2 * 86400000));
 
   const { data: appointments, error } = await supabase
     .from("appointments")
     .select("id, start_time, end_time, status, kind, patient_id, treatment_type_id")
-    .gte("start_time", tomorrow.toISOString())
-    .lt("start_time", dayAfter.toISOString())
+    .gte("start_time", mananaGT)
+    .lt("start_time", pasadaGT)
     .eq("kind", "patient")
     .neq("status", "cancelled");
 
@@ -120,8 +132,8 @@ export default async function handler(req, res) {
   }
 
     res.status(200).json({
-      sent_at: now.toISOString(),
-      target_date: tomorrow.toISOString().slice(0, 10),
+      sent_at: new Date().toISOString(),
+      target_date: mananaGT,
       reminders_count: reminders.length,
       reminders,
     });

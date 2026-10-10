@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, toIsoDate } from "@/lib/utils";
 import type { LabCase, LabStatus, Patient } from "@/types";
 import { MobileFAB } from "@/components/ui/mobile-fab";
 import { setSeccionTour } from "@/components/tour/uso-tour";
@@ -264,7 +264,7 @@ function LabCaseDialog({
       setTooth("");
       setShade("");
       setFee("");
-      setSentAt(new Date().toISOString().slice(0, 10));
+      setSentAt(toIsoDate(new Date()));
       setDueAt("");
       setPractitionerId("none");
       setNotes("");

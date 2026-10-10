@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useApp } from "@/context";
-import { cn, colorClasses, minutesOfDay } from "@/lib/utils";
+import { cn, colorClasses, minutesOfDay, toIsoDate } from "@/lib/utils";
 import type { Appointment, Operatory } from "@/types";
 import { AppointmentCard } from "./appointment-card";
 
@@ -53,7 +53,7 @@ export function DayGrid({ date, operatories, appointments, onSlotClick, onAppoin
   }, [appointments]);
 
   // "Now" indicator only for today.
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = toIsoDate(new Date());
   const showNow = date === todayIso;
   const nowMin = minutesOfDay(new Date().toISOString());
   const nowTop = showNow && nowMin >= DAY_START_MIN && nowMin <= DAY_END_MIN

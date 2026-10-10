@@ -1,4 +1,4 @@
 #!/bin/bash
-# Start OpenDentist dev servers
-cd /home/ardan/OpenDentist
+# Servidor de desarrollo (Vite). La API dev vive en vite-auth-plugin.ts.
+cd "$(dirname "$0")"
 exec pnpm dev

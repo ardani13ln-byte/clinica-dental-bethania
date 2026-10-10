@@ -6,6 +6,7 @@ import { api } from "@/api";
 import { useApp } from "@/context";
 import { setSeccionTour } from "@/components/tour/uso-tour";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { toIsoDate } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -36,8 +37,8 @@ export function ReportsPage({ navigate }: { navigate: (to: string) => void }) {
     (async () => {
       try {
         setLoading(true);
-        const today = new Date().toISOString().slice(0, 10);
-        const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+        const today = toIsoDate(new Date());
+        const manana = toIsoDate(new Date(Date.now() + 86400000));
         const [res, apptRes, mananaRes, acepRes] = await Promise.all([
           api<ReportsSummary>("GET", "/api/reports/summary"),
           api<{ appointments: Appointment[] }>("GET", `/api/appointments?date=${today}`),

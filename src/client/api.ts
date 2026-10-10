@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-client";
+import { toIsoDate } from "./lib/utils";
 import { z } from "zod";
 
 // ── Zod Schemas ───────────────────────────────────────────────────
@@ -61,7 +62,7 @@ const PlanItemSchema = z.object({
   tooth: optStr,
   surface: optStr,
   fee: z.number().min(0).optional(),
-  status: z.enum(["planned", "approved", "completed", "cancelled"]).optional(),
+  status: z.enum(["planned", "accepted", "completed", "declined"]).optional(),
   notes: optStr,
   sort_order: z.number().int().optional(),
 });
@@ -812,14 +813,15 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
   // ── Reports ──
   if (path === "/api/reports/summary" && method === "GET") {
-    const today = new Date().toISOString().slice(0, 10);
+    // Hora local del navegador (GT en la clinica): nunca UTC para "hoy".
+    const today = toIsoDate(new Date());
     const startOfMonth = `${today.slice(0, 8)}01`;
     const startOfWeek = (() => {
       const d = new Date(`${today}T00:00:00`);
       const dow = d.getDay();
       const diff = (dow + 6) % 7;
       d.setDate(d.getDate() - diff);
-      return d.toISOString().slice(0, 10);
+      return toIsoDate(d);
     })();
 
     const [todayR, weekR, monthR, completedR, noShowR, cancelledR, byTreatR, bySourceR, prodR, paidR, labR, waitR] = await Promise.all([
@@ -994,11 +996,13 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path === "/api/system-logs" && method === "POST") {
     const d = body as Record<string, unknown>;
+    // user_email lo pone el servidor desde la sesion: no se acepta del cliente.
+    const { data: userData } = await supabase.auth.getUser();
     const { data, error } = await supabase.from("system_logs").insert({
       level: d.level ?? "info",
       category: d.category ?? "system",
       message: d.message,
-      user_email: d.user_email ?? null,
+      user_email: userData.user?.email ?? null,
       metadata: d.metadata ?? {},
     }).select("*").single();
     checkError({ error }, "log insert");
@@ -1020,6 +1024,19 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   if (path.startsWith("/api/profiles/") && method === "PUT") {
     const id = path.split("/")[3];
     const d = body as Record<string, unknown>;
+    // Protege al ultimo superadmin activo: no se puede degradar ni desactivar.
+    if (d.role !== undefined || d.active !== undefined) {
+      const { data: current } = await supabase.from("profiles").select("role, active").eq("id", id).maybeSingle() as {
+        data: { role: string; active: boolean } | null;
+      };
+      const nextRole = (d.role as string) ?? current?.role;
+      const nextActive = (d.active as boolean) ?? current?.active;
+      if (current?.role === "superadmin" && current?.active && !(nextRole === "superadmin" && nextActive)) {
+        const { count } = await supabase.from("profiles").select("id", { count: "exact", head: true })
+          .eq("role", "superadmin").eq("active", true).neq("id", id);
+        if (!count) throw new Error("No se puede quitar al último superadmin activo.");
+      }
+    }
     const { data, error } = await supabase.from("profiles").update({
       role: d.role,
       active: d.active,
