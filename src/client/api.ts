@@ -323,7 +323,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/operatories/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("operatories").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const { data, error } = await supabase.from("operatories").update(validate(OperatorySchema.partial(), body, "operatory")).eq("id", id).select("*").single();
     checkError({ error }, "operatory update");
     return { operatory: data } as T;
   }
@@ -354,7 +354,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/practitioners/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("practitioners").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const { data, error } = await supabase.from("practitioners").update(validate(PractitionerSchema.partial(), body, "practitioner")).eq("id", id).select("*").single();
     checkError({ error }, "practitioner update");
     return { practitioner: data } as T;
   }
@@ -385,7 +385,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/treatment-types/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("treatment_types").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const { data, error } = await supabase.from("treatment_types").update(validate(TreatmentTypeSchema.partial(), body, "treatment type")).eq("id", id).select("*").single();
     checkError({ error }, "treatment_type update");
     return { treatment_type: data } as T;
   }
@@ -522,7 +522,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/appointments/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("appointments").update(body as Record<string, unknown>).eq("id", id).select(APPT_SELECT).single();
+    const { data, error } = await supabase.from("appointments").update(validate(AppointmentSchema.partial(), body, "appointment")).eq("id", id).select(APPT_SELECT).single();
     checkError({ error }, "appointment update");
     return { appointment: flattenAppointment(data) } as T;
   }
@@ -556,7 +556,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/treatment-plan-items/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("treatment_plan_items").update(body as Record<string, unknown>).eq("id", id).select(PLAN_SELECT).single();
+    const { data, error } = await supabase.from("treatment_plan_items").update(validate(PlanItemSchema.partial(), body, "plan item")).eq("id", id).select(PLAN_SELECT).single();
     checkError({ error }, "plan item update");
     return { item: flattenPlanItem(data) } as T;
   }
@@ -719,7 +719,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/appointments-to-make/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("appointments_to_make").update(body as Record<string, unknown>).eq("id", id).select(TOMAKE_SELECT).single();
+    const { data, error } = await supabase.from("appointments_to_make").update(validate(ToMakeSchema.partial(), body, "to-make entry")).eq("id", id).select(TOMAKE_SELECT).single();
     checkError({ error }, "to make update");
     return { entry: flattenToMake(data) } as T;
   }
@@ -755,7 +755,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/insurance-plans/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("insurance_plans").update(body as Record<string, unknown>).eq("id", id).select("*").single();
+    const { data, error } = await supabase.from("insurance_plans").update(validate(InsuranceSchema.partial(), body, "insurance plan")).eq("id", id).select("*").single();
     checkError({ error }, "insurance update");
     return { plan: data } as T;
   }
@@ -799,7 +799,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   }
   if (path.startsWith("/api/lab-cases/") && method === "PUT") {
     const id = parseInt(path.split("/")[3], 10);
-    const { data, error } = await supabase.from("lab_cases").update(body as Record<string, unknown>).eq("id", id).select(LAB_SELECT).single();
+    const { data, error } = await supabase.from("lab_cases").update(validate(LabCaseSchema.partial(), body, "lab case")).eq("id", id).select(LAB_SELECT).single();
     checkError({ error }, "lab case update");
     return { case: flattenLabCase(data) } as T;
   }

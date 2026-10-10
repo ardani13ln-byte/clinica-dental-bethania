@@ -27,15 +27,30 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: Cifrar respaldo (gpg)
+        run: |
+          echo "$BACKUP_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o "$ARCHIVO.gpg" "$ARCHIVO"
+          shred -u "$ARCHIVO"
+          ls -la "$ARCHIVO.gpg"
+          echo "ARCHIVO=$ARCHIVO.gpg" >> "$GITHUB_ENV"
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+
       - name: Verificar integridad
         run: |
-          pg_restore --list "$ARCHIVO" | grep -c "TABLE DATA"
-          pg_restore --list "$ARCHIVO" | grep "TABLE DATA public patients" \
+          echo "$BACKUP_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 \
+            -o /tmp/verificar.dump -d "$ARCHIVO"
+          pg_restore --list /tmp/verificar.dump | grep -c "TABLE DATA"
+          pg_restore --list /tmp/verificar.dump | grep "TABLE DATA public patients" \
             || (echo "Falta tabla patients" && exit 1)
+          shred -u /tmp/verificar.dump
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
 
-      - name: Guardar artefacto (90 días)
+      - name: Guardar artefacto cifrado (90 días)
         uses: actions/upload-artifact@v4
         with:
-          name: respaldo-bd
+          name: respaldo-bd-cifrado
           path: ${{ env.ARCHIVO }}
           retention-days: 90

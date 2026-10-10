@@ -1,8 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
-const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY || "";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || SUPABASE_KEY;
 
 function formatPhone(phone) {
   let digits = phone.replace(/\D/g, "");
@@ -31,17 +29,23 @@ export default async function handler(req, res) {
     }
 
     const authHeader = req.headers["authorization"];
+    // Fail-closed: sin secreto configurado nadie entra (antes "Bearer undefined" abría).
+    if (!process.env.CRON_SECRET) {
+      res.status(500).json({ error: "Cron no configurado" });
+      return;
+    }
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
-    if (!SUPABASE_URL || !SERVICE_KEY) {
-      res.status(500).json({ error: "Missing env vars", has_url: !!SUPABASE_URL, has_key: !!SERVICE_KEY });
+    // Sin service key no hay acceso elevado: fallar en vez de degradar a anon.
+    if (!SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+      res.status(500).json({ error: "Cron no configurado" });
       return;
     }
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const supabase = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
   const now = new Date();
   const tomorrow = new Date(now);
@@ -122,6 +126,7 @@ export default async function handler(req, res) {
       reminders,
     });
   } catch (err) {
-    res.status(500).json({ error: String(err), stack: err?.stack?.split("\n").slice(0, 5) });
+    console.error("cron whatsapp:", err);
+    res.status(500).json({ error: "Error interno" });
   }
 }

@@ -40,9 +40,22 @@ con las mismas rutas (`pacientes/<id>/...`) registradas en `fotos_tratamiento`.
 
 ## Automatización
 
-`.github/workflows/respaldo.yml` corre `pg_dump` cada domingo 03:00 (America/Guatemala)
-y guarda el artefacto 90 días. Requiere el secreto `DATABASE_URL` en el repo
-(Settings → Secrets → Actions) con la URL del pooler incluyendo la contraseña.
+`.github/workflows/respaldo.yml` corre `pg_dump` cada domingo 03:00 (America/Guatemala),
+**cifra el dump con gpg (AES-256)** y guarda el `.gpg` como artefacto 90 días.
+Sin la frase de paso, el artefacto es inútil para quien lo descargue.
+
+Requiere dos secretos en el repo (Settings → Secrets → Actions):
+
+| Secreto | Valor |
+|---|---|
+| `DATABASE_URL` | URL del pooler con contraseña (ver abajo) |
+| `BACKUP_PASSPHRASE` | Frase de paso larga para cifrar (genérala con `openssl rand -base64 32`) |
+
+Descifrar una copia:
+
+```bash
+gpg -o respaldo.dump -d respaldo-YYYYMMDD-HHMMSS.dump.gpg
+```
 
 ## Frecuencia recomendada
 

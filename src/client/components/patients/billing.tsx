@@ -86,10 +86,10 @@ export function Billing({ patientId }: { patientId: number }) {
   }
 
   async function remove(id: number) {
-    if (!confirm("¿Eliminar esta factura?")) return;
+    if (!confirm("¿Anular esta factura? Quedará registrada como anulada (las facturas no se borran).")) return;
     try {
-      await api("DELETE", `/api/invoices/${id}`);
-      setInvoices((prev) => prev.filter((i) => i.id !== id));
+      const res = await api<{ invoice: Invoice }>("PUT", `/api/invoices/${id}`, { status: "void" });
+      setInvoices((prev) => prev.map((i) => (i.id === id ? res.invoice : i)));
     } catch (err) {
       app.setError((err as Error).message);
     }
